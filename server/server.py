@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import os.path
 import base64
-import json
+import time
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -52,39 +52,42 @@ def main():
     # except HttpError as error:
     #     # TODO(developer) - Handle errors from gmail API.
     #     print(f'An error occurred: {error}')
+    while True:
+        try:
+            service = build('gmail', 'v1', credentials=creds)
+            results = service.users().messages().list(userId='me', labelIds=[
+                'INBOX', 'UNREAD'], includeSpamTrash='false', ).execute()
+            messages = results.get('messages', [])
+            if not messages:
+                print('No new messages.')
+            else:
+                for message in messages:
+                    msg = service.users().messages().get(
+                        userId='me', id=message['id']).execute()
+                    email_data = msg['payload']['headers']
+                    for values in email_data:
+                        name = values['name']
+                        if name == 'From':
+                            from_name = values['value']
+                            for part in msg['payload']['parts']:
+                                try:
+                                    data = part['body']["data"]
+                                    byte_code = base64.urlsafe_b64decode(data)
 
-    try:
-        service = build('gmail', 'v1', credentials=creds)
-        results = service.users().messages().list(userId='me', labelIds=[
-            'INBOX', 'UNREAD'], includeSpamTrash='false', ).execute()
-        messages = results.get('messages', [])
-        if not messages:
-            print('No new messages.')
-        else:
-            for message in messages:
-                msg = service.users().messages().get(
-                    userId='me', id=message['id']).execute()
-                email_data = msg['payload']['headers']
-                for values in email_data:
-                    name = values['name']
-                    if name == 'From':
-                        from_name = values['value']
-                        for part in msg['payload']['parts']:
-                            try:
-                                data = part['body']["data"]
-                                byte_code = base64.urlsafe_b64decode(data)
-
-                                text = byte_code.decode("utf-8")
-                                if (text[0] != '<'):
-                                    print("This is the message: " + str(text))
-
-                                # mark the message as read
-                                msg = service.users().messages().modify(userId='me', id=message['id'], body={
-                                    'removeLabelIds': ['UNREAD']}).execute()
-                            except BaseException as error:
-                                pass
-    except HttpError as error:
-        print(f'An error occurred: {error}')
+                                    text = byte_code.decode("utf-8")
+                                    if (text[0] != '<'):
+                                        # print("This is the message: " + str(text))
+                                        print(text)
+                                        myAr = text.splitlines()
+                                        print(myAr)
+                                    # mark the message as read
+                                    msg = service.users().messages().modify(userId='me', id=message['id'], body={
+                                        'removeLabelIds': ['UNREAD']}).execute()
+                                except BaseException as error:
+                                    pass
+        except HttpError as error:
+            print(f'An error occurred: {error}')
+        time.sleep(10)
 
 
 if __name__ == '__main__':
