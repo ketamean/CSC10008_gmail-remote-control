@@ -75,7 +75,7 @@ def main():
                                     byte_code = base64.urlsafe_b64decode(data)
 
                                     text = byte_code.decode("utf-8")
-                                    if (text[0] != '<'):
+                                    if (text.find("div") == -1):
                                         # print("This is the message: " + str(text))
                                         print(text)
                                         myAr = text.splitlines()
