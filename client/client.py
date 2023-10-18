@@ -2,6 +2,8 @@ from __future__ import print_function
 
 
 import base64
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 import mimetypes
 import os
 from email.message import EmailMessage
@@ -78,27 +80,36 @@ def gmail_send_message():
 
     try:
         service = build('gmail', 'v1', credentials=creds)
-        message = EmailMessage()
-
-        message.set_content('This is automated draft mail')
+        message = MIMEMultipart()
 
         message['To'] = 'vinhpham123.np@gmail.com'
         message['From'] = 'chiemthoica@gmail.com'
         message['Subject'] = 'Automated draft'
+        content = 'How neat is that?'
+        body = MIMEText(content, 'plain')
+        message.attach(body)
+
+        directory = os.listdir('image')
+        # print(directory)
+        for file in directory:
+            attachment_filename = file
+            print(attachment_filename)
+            # guessing the MIME type
+            type_subtype, _ = mimetypes.guess_type(attachment_filename)
+            maintype, subtype = type_subtype.split('/')
+
+            with open(os.path.join("image", attachment_filename), 'rb') as fp:
+                part = MIMEApplication(fp.read(), Name=os.path.basename(
+                    os.path.join("image", attachment_filename)))
+                part['Content-Disposition'] = 'attachment; filename="{}"'.format(
+                    os.path.basename(os.path.join("image", attachment_filename)))
+            message.attach(part)
 
         # encoded message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
             .decode()
 
-        attachment_filename = 'file.png'
-        # guessing the MIME type
-        type_subtype, _ = mimetypes.guess_type(attachment_filename)
-        maintype, subtype = type_subtype.split('/')
-
-        with open(attachment_filename, 'rb') as fp:
-            attachment_data = fp.read()
-        message.add_attachment(attachment_data, maintype, subtype)
-
+        # loop through directory
         encoded_message = base64.urlsafe_b64encode(
             message.as_bytes()).decode()
 
