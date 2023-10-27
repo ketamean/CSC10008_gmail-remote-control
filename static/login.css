@@ -1,0 +1,48 @@
+.login-button {
+    justify-content: center;    /* horizontal */
+    align-items: center;        /* vertical   */
+    width: 15rem;
+
+    height: 2rem;
+    /* width: ; */
+    /* min-width: 100%; */
+
+    border: none;
+
+    margin: 8px;
+
+    font-weight: bold;
+}
+
+/* main {
+    height: ;
+} */
+
+.login-button-container {
+    margin: auto;
+    justify-content: center;
+    align-items: center;
+}
+
+.round-border {
+    display: flex;
+    flex-direction: row;
+    border-radius: 10px;
+}
+
+#login-anonymous {
+    background-color: black;
+    color: #ffffff;
+}
+
+#login-with-email:hover,
+#login-anonymous:hover {
+    font-weight: bold;
+    background-color: #b9b9b9;
+    color: black;
+}
+
+#login-with-email {
+    background-color: #cb3e3e;
+    color: #f3f3f3e5;
+}

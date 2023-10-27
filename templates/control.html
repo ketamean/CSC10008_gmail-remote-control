@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Remote Control via Gmail</title>
+
+    <!-- style CSS -->
+    <link
+      rel="stylesheet"
+      href="/static/general.css"
+    >
+    <link
+      rel="stylesheet"
+      href="/static/control.css"
+    >
+
+
+    <!-- icon -->
+    <link
+      rel="icon"
+      href="/static/assets/icon.png"
+      type="image/x-icon"
+    >
+
+    <!-- Bootstrap 5.0.2 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    >
+  </head>
+  <body style="height: 100vh;">
+    <main class="round-border">
+      <div class="container round-border">
+        <div
+          class="row"
+          style="height: 30px; margin-top: auto; margin-bottom: auto;"
+        >
+          <div
+            class="container col-1"
+            style="padding: 0;"
+          >
+            <button
+              type="button"
+              id="back-button"
+              style="border: none; background-color: transparent; outline: none; justify-content: left;"
+              onclick="redirectToLogin()"
+            >
+              <img
+                src="/static/asset/back-icon.png"
+                title="go-back-icon"
+                style="scale: 0.7;"
+              />
+            </button>
+          </div>
+  
+          <div
+            class="container d-flex fs-6 col"
+            style="justify-content: center;"
+          >
+            <strong>Remote Control via Gmail</strong>
+          </div>
+  
+          <div
+            class="container col-1"
+            style="padding-left: 33px;"
+          >
+            <!-- <img src="/static/asset/home.png" title="icon-home"/> -->
+          </div>
+        </div> 
+
+        <div
+          class="row gx-1"
+          style="padding-left: 5px; padding-right: 5px;"
+        >
+          <div
+            id="command-container"
+            class="round-border col-3 justify-content-center"
+          >
+            <!-- BUTTONS will be added here -->
+            <!-- <button
+                type="button"
+                class="command-button"
+                id="command-button-0"
+                onmouseover="openChildCommandBoard(0)"
+                onmouseout="closeChildCommandBoard(0)"
+            > -->
+
+            </button>
+          </div>
+          
+          <div
+            id="mail-container"
+            class="round-border col"
+            style="z-index: 1;"
+          >
+            <div
+              class="container round-border text-box"
+              style="max-height: 2rem; justify-content: center; padding-top: 3px; padding-bottom: 3px; padding-left: 6px;"
+            >
+              From: <span id="text-from">{{ client_email }}</span>
+            </div>
+
+            <div
+              class="round-border text-box"
+              style="margin-top: 4px;"
+            >
+              <!-- <form action="">
+                <input type="text" placeholder="Your commands">
+              </form> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+<script>
+let list_commands = [
+    {
+        title: "Key logger",
+        id: "button-keylogger",
+        child_command: [],
+    },
+
+    {
+        title: "Shutdown/Logout",
+        id: "button-shutdown",
+        child_command: [
+            {
+                title: "Shutdown computer",
+                id: "sub-button-shutdown",
+                child_command: [],
+            },
+
+            {
+                title: "Logout computer",
+                id: "sub-button-logout",
+                child_command: [],
+            },
+        ]
+    },
+
+    {
+        title: "Screenshot",
+        id: "button-screenshot",
+        child_command: [],
+    },
+
+    {
+        title: "Application",
+        id: "button-application",
+        child_command: [
+            {
+                title: "List applications",
+                id: "sub-button-list-apps",
+                child_command: [],
+            },
+
+            {
+                title: "Start an application",
+                id: "sub-button-start-app",
+                child_command: [],
+            },
+        ],
+    },
+
+    {
+        title: "List processes",
+        id: "button-process",
+        child_command: [
+            // {
+            //     title: "List processes",
+            //     id: "sub-button-list-processes",
+            //     child_command: [],
+            // },
+
+            // {
+            //     title: "Kill a process",
+            //     id: "sub-button-kill-a-process",
+            //     child_command: [],
+            // },
+
+            // {
+            //     title: "Kill all processes",
+            //     id: "sub-button-kill-all-processes",
+            //     child_command: [],
+            // },
+        ],
+    }
+]
+
+function createButton() {
+    let command_container = ``;
+    for (let i = 0; i < list_commands.length; ++i) {
+        command_container +=
+            `
+                <button
+                    type="button"
+                    class="command-button"
+                    id="command-button-${i}"
+                    onmouseover="hoverCommandButtons_In(${i})"
+                    onmouseout="hoverCommandButtons_Out(${i})"
+            `;
+        
+        if (list_commands[i].child_command.length > 0) {
+            // the button has child commands
+
+            // open div tag
+            command_container +=
+                `
+                        onclick="updateChildCommandBoard(${i})"
+                    >
+                        ${list_commands[i].title}
+                    </button>
+                    <div
+                        class="child-command-board d-none"
+                        id="child-command-board-${i}"
+                        style="border-radius: 0px 0px 10px 10px;"
+                    >
+                `;
+            for (let j = 0; j < list_commands[i].child_command.length; j++) {
+                command_container += 
+                    `
+                        <button
+                            type="button"
+                            class="round-border child-command-button"
+                            id="child-command-button-${i}"
+                            onclick="chooseCommand(${i}, ${j})"
+                        >
+                            ${list_commands[i].child_command[j].title}
+                        </button>
+                    `;
+            }
+
+            // close div tag
+            command_container +=
+                `
+                    </div>
+                `;
+        } else {
+            command_container +=
+                `
+                        onclick="chooseCommand(${i}, 0)"
+                    >
+                        ${list_commands[i].title}
+                    </button>
+                `
+        }
+    }
+    document.getElementById('command-container').innerHTML = command_container;
+}
+window.onload = createButton;
+
+let child_command_board = 0;            // keep the child command board which is opening
+
+function clearAllCommandButtons() {
+    document.getElementById('command-container').innerHTML = ``;
+}
+
+let child_command_board_opening = [0,0,0,0,0];  // mark opening child command board
+                                                // only idx 1 3 4 could be opened
+
+function updateChildCommandBoard(idx) {
+    let btn = document.getElementById('command-button-' + String(idx));
+    let board = document.getElementById('child-command-board-' + String(idx));
+    if (child_command_board_opening[idx] == 0) {
+        // was closing ==>> need to be opened
+        child_command_board_opening[idx] = 1;
+        btn.style.borderRadius = '10px 10px 0px 0px'
+        btn.style.backgroundColor = '#e7d6d6';
+        board.classList.remove("d-none");
+    } else {
+        // was opening ==>> need to be closed
+        child_command_board_opening[idx] = 0;
+        btn.style.borderRadius = '10px 10px 10px 10px'
+        btn.style.backgroundColor = 'transparent';
+        board.classList.add("d-none");
+    }
+}
+
+function hoverCommandButtons_In(idx) {
+    document.getElementById('command-button-' + String(idx)).style.backgroundColor = '#e7d6d6';
+}
+
+function hoverCommandButtons_Out(idx) {
+    if (child_command_board_opening[idx] == 0) {
+        document.getElementById('command-button-' + String(idx)).style.backgroundColor = 'transparent';
+    } else {
+        hoverCommandButtons_In(idx);
+    }
+}
+
+function redirectToLogin() {
+    window.location.href = "{{  url_for('login')  }}";
+}
+
+let chosen = [[0], [0, 0], [0], [0, 0], [0, 0, 0]]; // mark commands which were chosen
+/*  idx_i: command i
+    idx_j: child command j of command i     */
+function chooseCommand(idx_i, idx_j) {
+    if (chosen[idx_i][idx_j] == 1) {
+        // selected ==>> need to deselect
+        chosen[idx_i][idx_j] = 0;
+    } else {
+        chosen[idx_i][idx_j] = 1;
+    }
+}
+</script>
+
+  </body>
+</html>
