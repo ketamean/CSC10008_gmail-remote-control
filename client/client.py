@@ -23,7 +23,6 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://mail.google.com/']
 
-
 def gmail_create_draft_with_attachment():
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
@@ -109,7 +108,6 @@ def gmail_send_message():
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
             .decode()
 
-        # loop through directory
         encoded_message = base64.urlsafe_b64encode(
             message.as_bytes()).decode()
 
