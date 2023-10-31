@@ -19,8 +19,9 @@
 } */
 
 .login-button-container {
-    margin: auto;
-    justify-content: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
 }
 
@@ -43,6 +44,6 @@
 }
 
 #login-with-email {
-    background-color: #cb3e3e;
+    background-color: #31a357;
     color: #f3f3f3e5;
 }

@@ -1,8 +1,9 @@
-let list_commands = [
+let command_set = [
     {
         title: "Key logger",
         id: "button-keylogger",
         child_command: [],
+        command_content: "[key_logger]"
     },
 
     {
@@ -13,12 +14,14 @@ let list_commands = [
                 title: "Shutdown computer",
                 id: "sub-button-shutdown",
                 child_command: [],
+                command_content: "[shut_down]"
             },
 
             {
                 title: "Logout computer",
                 id: "sub-button-logout",
                 child_command: [],
+                command_content: "[log_out]"
             },
         ]
     },
@@ -27,6 +30,7 @@ let list_commands = [
         title: "Screenshot",
         id: "button-screenshot",
         child_command: [],
+        command_content: "[screen_capture]"
     },
 
     {
@@ -37,12 +41,14 @@ let list_commands = [
                 title: "List applications",
                 id: "sub-button-list-apps",
                 child_command: [],
+                command_content: "[list_apps]"
             },
 
             {
                 title: "Start an application",
                 id: "sub-button-start-app",
                 child_command: [],
+                command_content: "[start_app]"
             },
         ],
     },
@@ -69,12 +75,13 @@ let list_commands = [
             //     child_command: [],
             // },
         ],
+        command_content: "[list_processes]"
     }
 ]
 
 function createButton() {
     let command_container = ``;
-    for (let i = 0; i < list_commands.length; ++i) {
+    for (let i = 0; i < command_set.length; ++i) {
         command_container +=
             `
                 <button
@@ -85,7 +92,7 @@ function createButton() {
                     onmouseout="hoverCommandButtons_Out(${i})"
             `;
         
-        if (list_commands[i].child_command.length > 0) {
+        if (command_set[i].child_command.length > 0) {
             // the button has child commands
 
             // open div tag
@@ -93,7 +100,7 @@ function createButton() {
                 `
                         onclick="updateChildCommandBoard(${i})"
                     >
-                        ${list_commands[i].title}
+                        ${command_set[i].title}
                     </button>
                     <div
                         class="child-command-board d-none"
@@ -101,7 +108,7 @@ function createButton() {
                         style="border-radius: 0px 0px 10px 10px;"
                     >
                 `;
-            for (let j = 0; j < list_commands[i].child_command.length; j++) {
+            for (let j = 0; j < command_set[i].child_command.length; j++) {
                 command_container += 
                     `
                         <button
@@ -110,7 +117,7 @@ function createButton() {
                             id="child-command-button-${i}"
                             onclick="chooseCommand(${i}, ${j})"
                         >
-                            ${list_commands[i].child_command[j].title}
+                            ${command_set[i].child_command[j].title}
                         </button>
                     `;
             }
@@ -123,9 +130,9 @@ function createButton() {
         } else {
             command_container +=
                 `
-                        onclick="chooseCommand(${i}, 0)"
+                        onclick="chooseCommand(${i}, -1)"
                     >
-                        ${list_commands[i].title}
+                        ${command_set[i].title}
                     </button>
                 `
         }
@@ -139,27 +146,28 @@ function renderElementsOnLoad() {
 window.onload = renderElementsOnLoad;
 
 let child_command_board = 0;            // keep the child command board which is opening
-const hoverColor = '#e7d6d6';           // color of the command when being hovered
+const hoverColor = '#1e221f';           // color of the command buttons when being hovered
+const childCommandBoardColor = '';      // color of the child command button boards when being displayed
 
 function clearAllCommandButtons() {
     document.getElementById('command-container').innerHTML = ``;
 }
 
-let child_command_board_opening = [0,0,0,0,0];  // mark opening child command board
+let childCommandBoardOpening = [0,0,0,0,0];  // mark opening child command board
                                                 // only idx 1 3 4 could be opened
 
 function updateChildCommandBoard(idx) {
     let btn = document.getElementById('command-button-' + String(idx));
     let board = document.getElementById('child-command-board-' + String(idx));
-    if (child_command_board_opening[idx] == 0) {
+    if (childCommandBoardOpening[idx] == 0) {
         // was closing ==>> need to be opened
-        child_command_board_opening[idx] = 1;
+        childCommandBoardOpening[idx] = 1;
         btn.style.borderRadius = '10px 10px 0px 0px'
         btn.style.backgroundColor = hoverColor;
         board.classList.remove("d-none");
     } else {
         // was opening ==>> need to be closed
-        child_command_board_opening[idx] = 0;
+        childCommandBoardOpening[idx] = 0;
         btn.style.borderRadius = '10px 10px 10px 10px'
         btn.style.backgroundColor = 'transparent';
         board.classList.add("d-none");
@@ -171,7 +179,7 @@ function hoverCommandButtons_In(idx) {
 }
 
 function hoverCommandButtons_Out(idx) {
-    if (child_command_board_opening[idx] == 0) {
+    if (childCommandBoardOpening[idx] == 0) {
         document.getElementById('command-button-' + String(idx)).style.backgroundColor = 'transparent';
     } else {
         hoverCommandButtons_In(idx);
@@ -179,17 +187,30 @@ function hoverCommandButtons_Out(idx) {
 }
 
 function redirectToLogin() {
+    // remove all commands which have been chosen
+    document.getElementById('mail-content-box').innerHTML = ``;
+
+    // redirect to login page
     window.location.href = "{{  url_for('login')  }}";
 }
 
-let chosen = [[0], [0, 0], [0], [0, 0], [0, 0, 0]]; // mark commands which were chosen
+// each command can be chosen multiple times
 /*  idx_i: command i
     idx_j: child command j of command i     */
+let chosenCommands = [];
 function chooseCommand(idx_i, idx_j) {
-    if (chosen[idx_i][idx_j] == 1) {
-        // selected ==>> need to deselect
-        chosen[idx_i][idx_j] = 0;
+    // content = ``;
+    if (idx_j < 0) {
+        document.getElementById('mail-content-box').innerHTML += `${command_set[idx_i].command_content}\n`;
     } else {
-        chosen[idx_i][idx_j] = 1;
+        document.getElementById('mail-content-box').innerHTML += `${command_set[idx_i].child_command[idx_j].command_content}\n`;
     }
+}
+
+function gatherMsg() {
+
+}
+
+function sendMsg() {
+    
 }

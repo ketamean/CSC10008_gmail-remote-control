@@ -29,14 +29,17 @@
         <!-- icon -->
         <link
             rel="icon"
-            href="/static/assets/icon.png"
+            href="{{ url_for('static', filename='asset/icon.png') }}"
             type="image/x-icon"
         >
 
     </head>
 
     <body>
-        <main class="round-border" style="padding: 4px;">
+        <main class="round-border" style="padding: 4px; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: center;">
+                <img src="{{ url_for('static', filename='asset/logo.png') }}" title="logo" alt="logo">
+            </div>
             <div class="login-button-container">
                 <button
                     type="button"
