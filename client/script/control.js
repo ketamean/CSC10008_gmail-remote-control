@@ -201,16 +201,18 @@ let chosenCommands = [];
 function chooseCommand(idx_i, idx_j) {
     // content = ``;
     if (idx_j < 0) {
-        document.getElementById('mail-content-box').innerHTML += `${command_set[idx_i].command_content}\n`;
+        document.getElementById('mail-content-box').value += `${command_set[idx_i].command_content}\n`;
     } else {
-        document.getElementById('mail-content-box').innerHTML += `${command_set[idx_i].child_command[idx_j].command_content}\n`;
+        document.getElementById('mail-content-box').value += `${command_set[idx_i].child_command[idx_j].command_content}\n`;
     }
 }
 
-function gatherMsg() {
-
+function getMessage() {
+    let s = document.getElementById('mail-content-box').value;  // copy
+    return s;
 }
 
-function sendMsg() {
-    
+function sendMessage() {
+    let s = getMessage();
+    {{ sendMail(s) }}
 }

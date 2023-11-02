@@ -121,15 +121,22 @@
     margin-bottom: 2px;
 }
 
+#mail-content-and-send-btn {
+    display: flex;
+    align-items: flex-start;
+
+    height: 100%;
+    width: 100%;
+}
+
 #mail-content-box {
     margin-top: 2px;
     height: 100%;
+    width: 100%;
     border-radius: 7px 7px 0px 0px;
     font-weight: 0;
     overflow-y: auto;
     z-index: 0;
-    display: flex;
-    flex-direction: column row;
 }
 
 #mail-content-box, #mail-from-box {
@@ -147,4 +154,21 @@
     background-color: rgb(37, 35, 35);
     /* margin-top: 1px; */
     border-radius: 0px 0px 20px 20px;
+}
+
+#send-btn {
+    padding: 4px;
+    border: none;
+    border-radius: 30px 30px 30px 30px;
+    align-self: flex-end;
+    width: fit-content;
+    height: fit-content;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    bottom: 8px;
+    right: 8px;
 }

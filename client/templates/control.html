@@ -87,24 +87,26 @@
             From: <span id="text-from">{{ client_email }}</span>
           </div>
 
-          <!-- <div
-            class="text-box"
-            id="mail-content-box"
-            style="font-weight: 100;"
-          >
-            <form action="">
-              <input type="text" placeholder="Your commands">
-            </form>
-          </div> -->
-
-          <textarea class="text-box" id="mail-content-box" name="msg">
-            <button
+          <div id="mail-content-and-send-btn">
+            
+            <!-- <button
               type="button"
-              onclick=""
+              
+              onclick="sendMessage()"
             >
+              <img
+                src=""
+                title="Send"
+                alt="send-icon"
+              />  
+              Send
+            </button> -->
 
-            </button>
-          </textarea>
+            <form action="{{ url_for('send_mail_handler') }}" method="post">
+              <textarea class="text-box" id="mail-content-box" name="msg-content" placeholder="Your command here"></textarea>
+              <input type="submit" id="send-btn" value="Send" style="background: url({{ url_for('static', filename='asset/send.png') }});">
+            </form>
+          </div>
 
           <div id="alert-box">
             PLEASE DO-<span style="color: red;">NOT</span>-VIOLATE THE SYNTAX!
@@ -321,7 +323,6 @@ function chooseCommand(idx_i, idx_j) {
     } else {
         document.getElementById('mail-content-box').value += `${command_set[idx_i].child_command[idx_j].command_content}\n`;
     }
-    console.log(document.getElementById('mail-content-box').innerHTML);
 }
 </script>
 

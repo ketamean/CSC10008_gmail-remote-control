@@ -74,12 +74,16 @@
     <script>
         {% block authen %}
             {% if successAuthen == False: %}
-                popupLoginFailed();
+                {% if isAnonymous == True: %}
+                    alert('Cannot use anonymously. Please check "config/" directory')
+                {% else: %}
+                    alert('Cannot log in. Please try again')
+                {% endif %}
             {% endif %}
         {% endblock %}
 
         function popupLoginFailed() {
-            console.log('test');
+            console.log('test login failed');
         }
 
         function login(type) {
