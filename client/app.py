@@ -30,7 +30,7 @@ def initAccount(tokenFile):
     user_info['profile'], auth = gmail_api.checkAuthenticated()
     if auth == False:
         flags['authenticationState'] = 'failed'
-        return redirect(url_for('login'))
+        return redirect( url_for('login') )
     user_info['gmailAddress'] = user_info['profile'].get('emailAddress')
 
 @app.route("/control_anonymous/", methods=['GET', 'POST'])

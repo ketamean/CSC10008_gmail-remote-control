@@ -42,7 +42,7 @@ def authenticate(tokenFile):
     if not Creds or not Creds.valid:
         if Creds and Creds.expired and Creds.refresh_token:
             Creds.refresh(Request())
-        elif os.path.exists('config/credentials.json'):
+        elif not os.path.exists('config/credentials.json') :
             print("Cannot find credentials file")
             return None
         else:
