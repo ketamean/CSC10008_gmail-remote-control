@@ -1,6 +1,5 @@
 from flask import Flask, render_template, url_for, request, redirect
 from py_helpers import gmail_api
-# from smtp import *
 import os
 
 app = Flask(__name__)
@@ -62,16 +61,16 @@ def send_mail_handler():
     if len(msg) == 0:
         return redirect( url_for('control') )
     flags['msg_object'], flags['sendMsgError'] = gmail_api.sendMail(
-        receiver=SERVER_GMAIL_ADDRESS, sender=user_info['gmailAddress'], subject=user_info['gmailAddress'], msg_content=msg
+        receiver=SERVER_GMAIL_ADDRESS, sender=user_info['gmailAddress'], subject=SUBJECT_MAIL, msg_content=msg
     )
-    print(flags['msg_object'])
-    # msg_object.id
-    # msg_object.threadId
+    # print(flags['msg_object'])
+        # msg_object.id
+        # msg_object.threadId
     if flags['sendMsgError'] == None:
         return redirect( url_for('response') )
 
 @app.route("/response/", methods=['GET', 'POST'])    
-def viewReponse():
+def response():
     return render_template('response.html')
 
 

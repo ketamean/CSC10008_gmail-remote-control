@@ -22,7 +22,7 @@ from googleapiclient.errors import HttpError
 ################################################################
 ################################################################
 SCOPES = ['https://mail.google.com/']
-
+SUBJECT_MAIL = 'PCRC - REMOTE CONTROLLER VIA GMAIL'
 Service = None                                  # keeps gmail service of user's gmail account
                                                 # in case NOT ANONYMOUS
 Creds = None
@@ -71,7 +71,7 @@ def checkAuthenticated():
         return error, False
 
 def constructMail(receiver, sender, subject, msg_content):
-    message = MIMEMultipart()
+    message = MIMEMultipart('alternative')
     message['To'] = receiver
     message['From'] = sender
     message['Subject'] = subject
@@ -138,27 +138,47 @@ def readMails(conditions):
                         userId='me', id=message['id']).execute()
                     email_data = msg['payload']['headers']
                     for values in email_data:
-                        name = values['name']
-                        if name == 'From':
-                            from_name = values['value']
-                            for part in msg['payload']['parts']:
-                                try:
-                                    data = part['body']["data"]
-                                    byte_code = base64.urlsafe_b64decode(data)
+                        if values['name'] == 'Subject' and values['value'] == SUBJECT_MAIL:
+                            # from_name = values['value']
+                            if msg['payload'].get('parts') != None:
+                                for part in msg['payload']['parts']:
+                                    try:
+                                        data = part['body']["data"]
+                                        byte_code = base64.urlsafe_b64decode(data)
 
-                                    text = byte_code.decode("utf-8")
-                                    if (text.find("div") == -1):
-                                        # print("This is the message: " + str(text))
-                                        print(text)
-                                        myAr = text.splitlines()
-                                        print(myAr)
-                                    # mark the message as read
-                                    msg = Service.users().messages().modify(userId='me', id=message['id'], body={
-                                        'removeLabelIds': ['UNREAD']}).execute()
+                                        text = byte_code.decode("utf-8")
+                                        # if (text.find("div") == -1):
+                                        #     # print("This is the message: " + str(text))
+                                        #     # print(text)
+                                        #     myAr = text.splitlines()
+                                        #     # print(myAr)
+                                        # mark the message as read
+                                        msg = Service.users().messages().modify(userId='me', id=message['id'], body={
+                                            'removeLabelIds': ['UNREAD']}).execute()
+                                        return text
+                                    except BaseException as error:
+                                        pass
+                            else:
+                                try:
+                                    headers = msg['payload']['headers']
+                                    for thing in headers:
+                                        if thing['name'] == 'Subject' and thing['value'] == SUBJECT_MAIL:
+                                            data = part['body']["data"]
+                                            byte_code = base64.urlsafe_b64decode(data)
+
+                                            text = byte_code.decode("utf-8")
+                                            # if (text.find("div") == -1):
+                                            #     # print("This is the message: " + str(text))
+                                            #     # print(text)
+                                            #     myAr = text.splitlines()
+                                            #     # print(myAr)
+                                            # mark the message as read
+                                            msg = Service.users().messages().modify(userId='me', id=message['id'], body={
+                                                'removeLabelIds': ['UNREAD']}).execute()
+                                            return text
                                 except BaseException as error:
                                     pass
-                return None
         except HttpError as error:
             print(f'An error occurred: {error}')
             return error
-        time.sleep(6) # read mail for each 6 seconds
+        time.sleep(4) # read mail for each 4 seconds

@@ -198,9 +198,11 @@ function redirectToLogin() {
 /*  idx_i: command i
     idx_j: child command j of command i     */
 let chosenCommands = [];
+let keylogger_chosen = false;
 function chooseCommand(idx_i, idx_j) {
     // content = ``;
     if (idx_j < 0) {
+        if (idx_i === 0 && keylogger_chosen === true) return;
         document.getElementById('mail-content-box').value += `${command_set[idx_i].command_content}\n`;
     } else {
         document.getElementById('mail-content-box').value += `${command_set[idx_i].child_command[idx_j].command_content}\n`;
