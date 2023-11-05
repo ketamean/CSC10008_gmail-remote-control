@@ -79,6 +79,11 @@ body
     background: #c3a9a9;
 }
 
+.options .key-logger:visited
+{
+    pointer-events: none;
+}
+
 .menu
 {
     display: flex;

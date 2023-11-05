@@ -123,6 +123,7 @@
   </body>
   <script>
     var str="2.5%"
+    var flag = false
     function redirectToLogin() {
     // remove all commands which have been chosen
     document.getElementById('mail-content-box').innerHTML = ``;
@@ -133,6 +134,19 @@
 
     function insert(btn)
     {
+        if (btn.className == "key_logger")
+        {
+          if (flag)
+            alert("Can only get key logger once!");
+          else
+          {
+            alert("Add the amount of time you want for key logger (second): [key_logger-<time>] by replacing the default time(0)");
+            const box=document.getElementById('mail-content-box');
+            box.value += "[key_logger-0]\n";
+            flag = true;
+          }
+          return;
+        }
         const box=document.getElementById('mail-content-box');
         box.value += '[' + btn.className + ']\n';
     }
