@@ -1,8 +1,12 @@
+appopener==1.7
 keyboard==0.13.5
 numpy==1.26.1
 opencv-python==4.8.1.78
 Pillow==10.1.0
+psutil==5.9.6
 pynput==1.7.6
 pywin32==306
+regex==2023.10.3
 six==1.16.0
+wheel==0.41.3
 WMI==1.5.1
