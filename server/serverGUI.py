@@ -1,5 +1,3 @@
-# hello_world.py
-
 import PySimpleGUI as sg
 import server
 
@@ -11,13 +9,13 @@ layout = [
 
 # create the window
 window = sg.Window("Pc Remote Control Server", layout, margins=(10, 10))
-
+creds = server.main()
 started = False
 timecount = 0
 while True:
     if started == True:
         event, values = window.read(timeout=3000)
-        print("Hello World")
+        server.CheckMail(creds)
         timecount = timecount + 1
     else:
         event, values = window.read()
@@ -25,6 +23,7 @@ while True:
         timecount = 0
         started = True
         window["-OUTPUT-"].update("")
+        print("Starting Service")
     if event == "Stop":
         started = False
     if event in (sg.WIN_CLOSED, "Exit"):
