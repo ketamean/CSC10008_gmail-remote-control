@@ -36,9 +36,9 @@
     </head>
 
     <body>
-        <main class="round-border" style="padding: 4px; display: flex; flex-direction: column;">
+        <main class="round-border" style="padding-top: 5%; display: flex; flex-direction: column; align-items: center;">
             <div style="display: flex; justify-content: center;">
-                <img src="{{ url_for('static', filename='asset/logo.png') }}" title="logo" alt="logo">
+                <img src="{{ url_for('static', filename='asset/pink-logo.jpg') }}" title="logo" alt="logo">
             </div>
             <div class="login-button-container">
                 <button
@@ -74,12 +74,16 @@
     <script>
         {% block authen %}
             {% if successAuthen == False: %}
-                popupLoginFailed();
+                {% if isAnonymous == True: %}
+                    alert('Cannot use anonymously. Please check "config/" directory')
+                {% else: %}
+                    alert('Cannot log in. Please try again')
+                {% endif %}
             {% endif %}
         {% endblock %}
 
         function popupLoginFailed() {
-            console.log('test');
+            console.log('test login failed');
         }
 
         function login(type) {

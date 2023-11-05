@@ -29,21 +29,22 @@
     display: flex;
     flex-direction: row;
     border-radius: 10px;
+    background-color: #fff9f9;
 }
 
 #login-anonymous {
-    background-color: black;
-    color: #ffffff;
+    background-color: #d5d5d5;
+    color: black;
 }
 
 #login-with-email:hover,
 #login-anonymous:hover {
     font-weight: bold;
-    background-color: #b9b9b9;
-    color: black;
+    background-color: #c3a9a9;
+    color: #faeded;
 }
 
 #login-with-email {
-    background-color: #31a357;
-    color: #f3f3f3e5;
+    background-color: #f5d8d8;
+    color: black;
 }

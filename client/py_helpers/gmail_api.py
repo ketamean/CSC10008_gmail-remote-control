@@ -1,10 +1,12 @@
 from __future__ import print_function
 
 import base64
+import os.path
+import time
+
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 import mimetypes
-import os
 from email.message import EmailMessage
 from email.mime.audio import MIMEAudio
 from email.mime.base import MIMEBase
@@ -21,50 +23,142 @@ from googleapiclient.errors import HttpError
 ################################################################
 SCOPES = ['https://mail.google.com/']
 
-SERVICE = None                                  # keeps gmail service of user's gmail account
+Service = None                                  # keeps gmail service of user's gmail account
                                                 # in case NOT ANONYMOUS
+Creds = None
 
-def buildService(tokenFile):
+def authenticate(tokenFile):
     """
         let user authenticate and authorize this app with Google
 
-        then build gmail SERVICE
+        then build gmail service
     """
     ############### try: ###############
-    global SERVICE
-    creds = None
+    global Service, Creds
     tokenFile = 'config/' + tokenFile + '.json'
     if os.path.exists(tokenFile):
-        creds = Credentials.from_authorized_user_file(tokenFile, SCOPES)
+        Creds = Credentials.from_authorized_user_file(tokenFile, SCOPES)
     # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+    if not Creds or not Creds.valid:
+        if Creds and Creds.expired and Creds.refresh_token:
+            Creds.refresh(Request())
+        elif not os.path.exists('config/credentials.json'):
+            print("Cannot find credentials file")
+            return None
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 'config/credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
+            Creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open(tokenFile, 'w') as token:
-            token.write(creds.to_json())
-    SERVICE = build('gmail', 'v1', credentials=creds)
+            token.write(Creds.to_json())
+
+def buildService():
+    global Service, Creds
+    Service = build('gmail', 'v1', credentials=Creds)
 
 def checkAuthenticated():
     """
         check if user has authenticated and authorized
 
-        returns account's profile and a boolean to show whether user has authenticated
+        returns profile_obj, True || error, False
     """
-    global SERVICE
+    global Service
     try:
-        profile = SERVICE.users().getProfile(userId='me').execute()
+        profile = Service.users().getProfile(userId='me').execute()
         return profile, True
     except HttpError as error:
-        print('[Check authentication success] An error occurred: %s' % error)
-        return None, False
+        return error, False
 
-def sendMail():
-    print('alo')
+def constructMail(receiver, sender, subject, msg_content):
+    message = MIMEMultipart()
+    message['To'] = receiver
+    message['From'] = sender
+    message['Subject'] = subject
+    body = MIMEText(msg_content, 'plain')
+    message.attach(body)
+    if os.path.exists('image/'):
+        directory = os.listdir('image/')
+        for file in directory:
+            attachment_filename = file
+            # print(attachment_filename)
+            # guessing the MIME type
+            # type_subtype, _ = mimetypes.guess_type(attachment_filename)
+            # maintype, subtype = type_subtype.split('/')
+            with open(os.path.join("image", attachment_filename), 'rb') as fp:
+                part = MIMEApplication(fp.read(), Name=os.path.basename(
+                    os.path.join("image", attachment_filename)))
+                part['Content-Disposition'] = 'attachment; filename="{}"'.format(
+                    os.path.basename(os.path.join("image", attachment_filename)))
+            message.attach(part)
+    return message
 
-################################################################
-################################################################
+def sendMail(receiver, sender, subject, msg_content):
+    """
+        returns [str]msg obj, [str]error
+    """
+    global Service
+    try:
+        if not Service:
+            buildService()
+        message = constructMail(
+            receiver=receiver, sender=sender, subject=subject, msg_content=msg_content
+        )
+        # encoded message
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
+            .decode()
+
+        encoded_message = base64.urlsafe_b64encode(
+            message.as_bytes()).decode()
+
+        create_message = {
+            'raw': encoded_message
+        }
+        # pylint: disable=E1101
+        send_message = (Service.users().messages().send
+                        (userId="me", body=create_message).execute())
+        # print(F'Message Id: {send_message["id"]}')
+    except HttpError as err:
+        # print(F'An error occurred: {error}')
+        return None, err
+    return send_message, None
+
+def readMails(conditions):
+    global Service, Creds
+    while True:
+        try:
+            if not Service:
+                buildService()
+            results = Service.users().messages().list(userId='me', labelIds=[
+                'INBOX', 'UNREAD'], includeSpamTrash='false', ).execute()
+            messages = results.get('messages', [])
+            if messages:
+                for message in messages:
+                    msg = Service.users().messages().get(
+                        userId='me', id=message['id']).execute()
+                    email_data = msg['payload']['headers']
+                    for values in email_data:
+                        name = values['name']
+                        if name == 'From':
+                            from_name = values['value']
+                            for part in msg['payload']['parts']:
+                                try:
+                                    data = part['body']["data"]
+                                    byte_code = base64.urlsafe_b64decode(data)
+
+                                    text = byte_code.decode("utf-8")
+                                    if (text.find("div") == -1):
+                                        # print("This is the message: " + str(text))
+                                        print(text)
+                                        myAr = text.splitlines()
+                                        print(myAr)
+                                    # mark the message as read
+                                    msg = Service.users().messages().modify(userId='me', id=message['id'], body={
+                                        'removeLabelIds': ['UNREAD']}).execute()
+                                except BaseException as error:
+                                    pass
+                return None
+        except HttpError as error:
+            print(f'An error occurred: {error}')
+            return error
+        time.sleep(6) # read mail for each 6 seconds
