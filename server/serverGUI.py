@@ -1,6 +1,8 @@
 import PySimpleGUI as sg
 import server
 
+
+finalize = True
 layout = [
     [sg.Text("Log: ")],
     [sg.Output(size=(90, 20), key="-OUTPUT-")],
