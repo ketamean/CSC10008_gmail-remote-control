@@ -10,7 +10,7 @@ layout = [
 ]
 
 # create the window
-window = sg.Window("Pc Remote Control Server", layout, margins=(10, 10))
+window = sg.Window("Pc Remote Control Server", layout, margins=(10, 10), finalize=True)
 creds = server.main()
 started = False
 timecount = 0
