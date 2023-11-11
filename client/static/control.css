@@ -188,10 +188,12 @@
     height: 100vh;
     width: 100vw;
     background-color: #0000005f;
+
     display: flex;
     align-items: center;
     justify-content: center;
     position: fixed;
+    
     z-index: 10;
 
     animation: fadeIn ease-in 0.2s;

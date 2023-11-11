@@ -198,7 +198,7 @@ function pressKeyloggerBtn() {
     if (checkKeyloggerExisted() == true) {
         alert("only one valid key-logger command is allowed for each gmail");
     } else {
-        document.getElementsByClassName('modal__overlay').item(0).style.display = 'block';
+        document.getElementsByClassName('modal__overlay').item(0).style.display = 'flex';
     }
 }
 
