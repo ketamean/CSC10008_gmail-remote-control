@@ -19,11 +19,11 @@
         <!-- style CSS -->
         <link
             rel="stylesheet"
-            href="/static/general.css"
+            href="../static/general.css"
         >
         <link
             rel="stylesheet"
-            href="/static/login.css"
+            href="../static/login.css"
         >
 
         <!-- icon -->
@@ -36,10 +36,10 @@
     </head>
 
     <body>
-        <main class="round-border" style="padding: 4px; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: center;">
-                <img src="{{ url_for('static', filename='asset/logo.png') }}" title="logo" alt="logo">
-            </div>
+        <main class="round-border"
+            style="flex-direction: column; display: flex; justify-content: center; align-items: center;"
+        >
+            <img src="{{ url_for('static', filename='asset/logo.png') }}" title="logo" alt="logo">
             <div class="login-button-container">
                 <button
                     type="button"
@@ -48,17 +48,7 @@
                     onclick="login('anonymous')"
                 >
                     Use without your email
-                </button>
-
-                <!-- <button
-                    type="button"
-                    class="login-button round-border"
-                    id="login-with-email"
-                    onclick="login('')"
-                >
-                    
-                </button> -->
-
+                </button>    
                 <button
                     type="button"
                     class="login-button round-border"

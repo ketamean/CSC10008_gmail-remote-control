@@ -18,11 +18,11 @@
     <!-- style CSS -->
     <link
       rel="stylesheet"
-      href="/static/general.css"
+      href="../static/general.css"
     >
     <link
       rel="stylesheet"
-      href="/static/control.css"
+      href="../static/control.css"
     >
 
     <!-- icon -->
@@ -71,8 +71,7 @@
           id="command-container"
           class="round-border justify-content-center"
         >
-          <!-- BUTTONS will be added here -->
-          </button>
+
         </div>
         
         <div
@@ -88,23 +87,15 @@
           </div>
 
           <div id="mail-content-and-send-btn">
-            
-            <!-- <button
-              type="button"
-              
-              onclick="sendMessage()"
-            >
-              <img
-                src=""
-                title="Send"
-                alt="send-icon"
-              />  
-              Send
-            </button> -->
-
-            <form action="{{ url_for('send_mail_handler') }}" method="post">
-              <textarea class="text-box" id="mail-content-box" name="msg-content" placeholder="Your command here"></textarea>
-              <input type="submit" id="send-btn" value="Send" style="background: url({{ url_for('static', filename='asset/send.png') }});">
+            <form id="form-mail" action="{{ url_for('send_mail_handler') }}" method="post">
+              <textarea
+                class="text-box"
+                id="mail-content-box"
+                name="msg-content"
+                placeholder="Your command here"
+                spellcheck="false"
+              ></textarea>
+              <input type="submit" id="send-btn" value="Send">
             </form>
           </div>
 
@@ -114,14 +105,50 @@
         </div>
       </div>
     </main>
+    <div class="modal__overlay">
+        <div class="modal__inner">
+            <div class="modal__body">
+                <form>
+                    <div style="width: 100%;">
+                        <label for="recipient-name" style="width: 100%;">How long do you want to get key log (in seconds, from 0 to 999)?</label>
+                    </div>
+                    <input type="number" name="time-keylog" id="textbox-keylog">
+                </form>
+            </div>
+            <div class="modal__footer">
+                <button
+                    type="button"
+                    class="modal-button"
+                    onclick="closeKeyLoggerModal()"
+                >
+                    Close
+                </button>
 
+                <button
+                    type="button"
+                    class="modal-button"
+                    onclick="chooseCommand(0, -1)"
+                >
+                    Add command
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+  crossorigin="anonymous"
+>
+</script>
 <script>
 let command_set = [
     {
         title: "Key logger",
         id: "button-keylogger",
         child_command: [],
-        command_content: "[key_logger]"
+        command_content: "" // special case
     },
 
     {
@@ -174,25 +201,7 @@ let command_set = [
     {
         title: "List processes",
         id: "button-process",
-        child_command: [
-            // {
-            //     title: "List processes",
-            //     id: "sub-button-list-processes",
-            //     child_command: [],
-            // },
-
-            // {
-            //     title: "Kill a process",
-            //     id: "sub-button-kill-a-process",
-            //     child_command: [],
-            // },
-
-            // {
-            //     title: "Kill all processes",
-            //     id: "sub-button-kill-all-processes",
-            //     child_command: [],
-            // },
-        ],
+        child_command: [],
         command_content: "[list_processes]"
     }
 ]
@@ -200,66 +209,84 @@ let command_set = [
 function createButton() {
     let command_container = ``;
     for (let i = 0; i < command_set.length; ++i) {
-        command_container +=
+        if (i == 0) {
+            command_container +=
             `
-                <button
-                    type="button"
-                    class="command-button"
-                    id="command-button-${i}"
-                    onmouseover="hoverCommandButtons_In(${i})"
-                    onmouseout="hoverCommandButtons_Out(${i})"
+            <button
+                type="button"
+                class="command-button"
+                id="command-button-0"
+                onclick="pressKeyloggerBtn()";
+                onmouseover="hoverCommandButtons_In(0)"
+                onmouseout="hoverCommandButtons_Out(0)"
+            >
+                Key logger
+            </button>
             `;
-        
-        if (command_set[i].child_command.length > 0) {
-            // the button has child commands
-
-            // open div tag
-            command_container +=
-                `
-                        onclick="updateChildCommandBoard(${i})"
-                    >
-                        ${command_set[i].title}
-                    </button>
-                    <div
-                        class="child-command-board d-none"
-                        id="child-command-board-${i}"
-                        style="border-radius: 0px 0px 10px 10px;"
-                    >
-                `;
-            for (let j = 0; j < command_set[i].child_command.length; j++) {
-                command_container += 
-                    `
-                        <button
-                            type="button"
-                            class="round-border child-command-button"
-                            id="child-command-button-${i}"
-                            onclick="chooseCommand(${i}, ${j})"
-                        >
-                            ${command_set[i].child_command[j].title}
-                        </button>
-                    `;
-            }
-
-            // close div tag
-            command_container +=
-                `
-                    </div>
-                `;
         } else {
             command_container +=
                 `
-                        onclick="chooseCommand(${i}, -1)"
-                    >
-                        ${command_set[i].title}
-                    </button>
-                `
+                    <button
+                        type="button"
+                        class="command-button"
+                        id="command-button-${i}"
+                        onmouseover="hoverCommandButtons_In(${i})"
+                        onmouseout="hoverCommandButtons_Out(${i})"
+                `;
+            
+            if (command_set[i].child_command.length > 0) {
+                // the button has child commands
+
+                // open div tag
+                command_container +=
+                    `
+                            onclick="updateChildCommandBoard(${i})"
+                        >
+                            ${command_set[i].title}
+                        </button>
+                        <div
+                            class="child-command-board d-none"
+                            id="child-command-board-${i}"
+                            style="border-radius: 0px 0px 10px 10px;"
+                        >
+                    `;
+                for (let j = 0; j < command_set[i].child_command.length; j++) {
+                    command_container += 
+                        `
+                            <button
+                                type="button"
+                                class="round-border child-command-button"
+                                id="child-command-button-${i}"
+                                onclick="chooseCommand(${i}, ${j})"
+                            >
+                                ${command_set[i].child_command[j].title}
+                            </button>
+                        `;
+                }
+
+                // close div tag
+                command_container +=
+                    `
+                        </div>
+                    `;
+            } else {
+                command_container +=
+                    `
+                            onclick="chooseCommand(${i}, -1)"
+                        >
+                            ${command_set[i].title}
+                        </button>
+                    `
+            }
         }
+
     }
     document.getElementById('command-container').innerHTML = command_container;
 }
 
 function renderElementsOnLoad() {
     createButton();
+    document.getElementsByClassName('modal__overlay').item(0).style.display = 'none';
 }
 window.onload = renderElementsOnLoad;
 
@@ -271,8 +298,8 @@ function clearAllCommandButtons() {
     document.getElementById('command-container').innerHTML = ``;
 }
 
-let childCommandBoardOpening = [0,0,0,0,0];  // mark opening child command board
-                                                // only idx 1 3 4 could be opened
+let childCommandBoardOpening = [0,0,0,0,0]; // mark opening child command board
+                                            // only idx 1 3 4 could be opened
 
 function updateChildCommandBoard(idx) {
     let btn = document.getElementById('command-button-' + String(idx));
@@ -312,17 +339,66 @@ function redirectToLogin() {
     window.location.href = "{{  url_for('login')  }}";
 }
 
+function pressKeyloggerBtn() {
+    if (checkKeyloggerExisted() == true) {
+        alert("only one valid key-logger command is allowed for each gmail");
+    } else {
+        document.getElementsByClassName('modal__overlay').item(0).style.display = 'block';
+    }
+}
+
+function closeKeyLoggerModal() {
+    document.getElementById('textbox-keylog').value = ``;
+    document.getElementsByClassName('modal__overlay').item(0).style.display = 'none';
+}
+
 // each command can be chosen multiple times
 /*  idx_i: command i
     idx_j: child command j of command i     */
-let chosenCommands = [];
 function chooseCommand(idx_i, idx_j) {
-    // content = ``;
-    if (idx_j < 0) {
-        document.getElementById('mail-content-box').value += `${command_set[idx_i].command_content}\n`;
-    } else {
-        document.getElementById('mail-content-box').value += `${command_set[idx_i].child_command[idx_j].command_content}\n`;
+    if (document.getElementById('mail-content-box').value != "") {
+        document.getElementById('mail-content-box').value += "\n";
     }
+
+    if (idx_i == 0) {
+        let str = document.getElementById('textbox-keylog').value;
+        if (isNaN(str) == true || str.length > 3 || str.length == 0 || str < 0) {
+            // input validation
+            alert("invalid input: only accept numbers from 0 to 999 (in seconds)");
+        } else {
+            document.getElementById('mail-content-box').value += "[key_logger-" + str + "]";
+            closeKeyLoggerModal();
+        }
+    } else {
+        if (idx_j < 0) {
+            document.getElementById('mail-content-box').value += `${command_set[idx_i].command_content}`;
+        } else {
+            document.getElementById('mail-content-box').value += `${command_set[idx_i].child_command[idx_j].command_content}`;
+        }    
+    }
+}
+
+function checkKeyloggerExisted() {
+    let msg = document.getElementById('mail-content-box').value;
+    cmds = getListCommands(msg);
+    console.log(cmds);
+    for (let i = 0; i < cmds.length; i++) {
+        if (cmds[i].search(/^\[key_logger-(\d|\d\d)\]$/) >= 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function getListCommands(msg) {
+    return msg.split(/\r|\n/);
+}
+
+function keypressModal_timekeylog(obj) {
+    console.log(obj.value.length)
+    if ( obj.value.length > 2 || !(obj.value[obj.value.length-1] >= '0' && obj.value[obj.value.length-1] <= '9') )
+        return false;
+    return true;
 }
 </script>
 

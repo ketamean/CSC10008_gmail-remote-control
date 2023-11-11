@@ -22,7 +22,7 @@ from googleapiclient.errors import HttpError
 ################################################################
 ################################################################
 SCOPES = ['https://mail.google.com/']
-SUBJECT_MAIL = 'PCRC - REMOTE CONTROLLER VIA GMAIL'
+SUBJECT_MAIL = 'pcrc'
 Service = None                                  # keeps gmail service of user's gmail account
                                                 # in case NOT ANONYMOUS
 Creds = None

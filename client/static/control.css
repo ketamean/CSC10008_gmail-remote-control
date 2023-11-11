@@ -1,3 +1,12 @@
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 #main-space {
     display: flex;
     flex-direction: column;
@@ -121,12 +130,12 @@
     margin-bottom: 2px;
 }
 
+#form-mail,
 #mail-content-and-send-btn {
-    display: flex;
-    align-items: flex-start;
-
     height: 100%;
     width: 100%;
+
+    position: relative;
 }
 
 #mail-content-box {
@@ -161,14 +170,74 @@
     border: none;
     border-radius: 30px 30px 30px 30px;
     align-self: flex-end;
-    width: fit-content;
+    width: 5rem;
     height: fit-content;
     z-index: 2;
 
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    position: absolute;
     bottom: 8px;
     right: 8px;
+
+    background-color: #ccdbcc
+}
+
+.modal__overlay {
+    height: 100vh;
+    width: 100vw;
+    background-color: #0000005f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 10;
+
+    animation: fadeIn ease-in 0.2s;
+}
+
+.modal__inner {
+    height: 35%;
+    width: 40%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-color: #f1fef5;
+    z-index: 11;
+
+    border-radius: 10px 10px 10px 10px;
+}
+
+.modal__body {
+    padding: 5px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px;
+}
+
+#textbox-keylog {
+    border-radius: 10px 10px 10px 10px;
+    width: 100%;
+    padding: 2px;
+}
+
+.modal__footer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-button {
+    border: none;
+    border-radius: 10px 10px 10px 10px;
+    background-color: #636962;
+    width: 120px;
+    height: 30px;
+    margin: 5px;
+    color: #f1fef5;
 }

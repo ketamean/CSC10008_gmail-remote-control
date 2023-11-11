@@ -14,6 +14,7 @@ flags = {
     'sendMsgError': None,                   # error caused by sending messages; is None if there is no error
     'msg_object': None,                     # Message object, including: 'id', 'threadId' and 'labelIds'
     'anonymous': None,                      # mark if user is using app anonymously, True | None
+    'logged_in': None
 }
 
 # SERVER_GMAIL_ADDRESS = 'truongthanhtoan2003@gmail.com'
@@ -36,16 +37,20 @@ def initAccount(tokenFile):
 def control_anonymous():
     flags['anonymous'] = True
     initAccount('token_anonymous')
+    flags['logged_in'] = True
     return redirect( url_for('control') )
 
 @app.route("/control_with_gmail/", methods=['GET', 'POST'])
 def control_with_gmail():
     flags['anonymous'] = None
     initAccount('token')
+    flags['logged_in'] = True
     return redirect( url_for('control') )
 
 @app.route("/control/", methods=['GET', 'POST'])
 def control():
+    if flags['logged_in'] != True:
+        return redirect( url_for('login') )
     if user_info['profile'] == None:
         return render_template("control.html", isAuthor=False)
     elif flags['sendMsgError']:
@@ -86,6 +91,7 @@ def resetUserInfo():
     global Service, Creds
     Service = None
     Creds = None
+    flags['logged_in'] = None
 
 @app.route("/", methods=['GET', 'POST'])
 def login():
@@ -97,4 +103,4 @@ def login():
         else:
             return render_template("login.html", successAuthen=False, isAnonymous=False)
     else:
-        return render_template("login.html", successAuthen=True)
+        return render_template("login.html")
