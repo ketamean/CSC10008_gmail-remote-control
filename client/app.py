@@ -17,8 +17,8 @@ flags = {
     'logged_in': None
 }
 
-# SERVER_GMAIL_ADDRESS = 'truongthanhtoan2003@gmail.com'
-SERVER_GMAIL_ADDRESS = 'chiemthoica@gmail.com'
+SERVER_GMAIL_ADDRESS = 'truongthanhtoan2003@gmail.com'
+# SERVER_GMAIL_ADDRESS = 'chiemthoica@gmail.com'
 
 def initAccount(tokenFile):
     try:
@@ -36,6 +36,9 @@ def initAccount(tokenFile):
 @app.route("/control_anonymous/", methods=['GET', 'POST'])
 def control_anonymous():
     flags['anonymous'] = True
+    if not os.path.exists('config/token_anonymous.json'):
+        flags['authenticationState'] = 'failed'
+        return redirect( url_for('login') )
     initAccount('token_anonymous')
     flags['logged_in'] = True
     return redirect( url_for('control') )
@@ -83,11 +86,8 @@ from py_helpers.gmail_api import *
 def resetUserInfo():
     user_info['gmailAddress'] = None
     user_info['profile'] = None
-    flags['anonymous'] = None
-    flags['authenticationState'] = None
     if os.path.exists('config/token.json'):
         os.remove('config/token.json')
-    
     global Service, Creds
     Service = None
     Creds = None
@@ -99,6 +99,7 @@ def login():
     if flags['authenticationState'] == 'failed':
         flags['authenticationState'] = None
         if flags['anonymous'] == True:
+            flags['anonymous'] = None
             return render_template("login.html", successAuthen=False, isAnonymous=True)
         else:
             return render_template("login.html", successAuthen=False, isAnonymous=False)

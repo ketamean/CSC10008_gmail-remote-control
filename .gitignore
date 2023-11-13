@@ -1,7 +1,6 @@
 .venv/
-
 .vscode/
-
 __pycache__/
-client/__pycache__
-client/py_helpers/__pycache__
+# client/__pycache__
+# client/py_helpers/__pycache__
+# server/__pycache__

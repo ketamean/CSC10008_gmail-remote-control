@@ -48,15 +48,17 @@
                     onclick="login('anonymous')"
                 >
                     Use without your email
-                </button>    
-                <button
-                    type="button"
-                    class="login-button round-border"
-                    id="login-with-email"
-                    onclick="login('')"
-                >
-                    Use your email
                 </button>
+                <form action="{{ url_for('control_with_gmail') }}" method="get">
+                    <button
+                        type="button"
+                        class="login-button round-border"
+                        id="login-with-email"
+                        onclick="login('')"
+                    >
+                        Use your email
+                    </button>
+                </form>
             </div>
         </main>
     </body>
@@ -65,16 +67,12 @@
         {% block authen %}
             {% if successAuthen == False: %}
                 {% if isAnonymous == True: %}
-                    alert('Cannot use anonymously. Please check "config/" directory')
+                    alert('Cannot use anonymously. Please check for the existence of "client/config/token_anonymous.json"')
                 {% else: %}
                     alert('Cannot log in. Please try again')
                 {% endif %}
             {% endif %}
         {% endblock %}
-
-        function popupLoginFailed() {
-            console.log('test login failed');
-        }
 
         function login(type) {
             if (type == 'anonymous') {
