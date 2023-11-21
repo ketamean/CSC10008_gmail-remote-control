@@ -79,10 +79,16 @@ def keylogger(duration):
 
 
 def shutdown():
+    outputDir = os.path.join("ServiceOutput", "shut_down.txt")
+    with open(outputDir, "w") as file:
+        file.write("The computer is shutting down")
     os.system("shutdown /s /t 1")
 
 
 def logout():
+    outputDir = os.path.join("ServiceOutput", "log_out.txt")
+    with open(outputDir, "w") as file:
+        file.write("The computer is logging out")
     os.system("shutdown -l")
 
 

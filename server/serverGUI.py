@@ -30,7 +30,7 @@ while True:
         started = False
     if event in (sg.WIN_CLOSED, "Exit"):
         break
-    if timecount == 10:
+    if timecount == 20:
         timecount = 0
         window["-OUTPUT-"].update("")
 window.close()

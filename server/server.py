@@ -25,6 +25,16 @@ def handle(myAr):
             service.listRunningApplication()
         if task == "[list_processes]":
             service.listRunningProcess()
+        if task == "[shut_down]":
+            service.shutdown()
+        if task == "[log_out]":
+            service.logout()
+        if task.find("[start_app]") != -1:
+            appName = task[11:]
+            service.openApplication(appName)
+        if task.find("[close_app]") != -1:
+            appName = task[11:]
+            service.closeApplication(appName)
 
 
 # def testoutput():
