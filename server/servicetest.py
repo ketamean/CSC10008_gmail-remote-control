@@ -10,15 +10,9 @@ while True:
     choose = input()
 
     if int(choose) == 1:
-        testtt = service.listRunningApplication()
-        for app in testtt:
-            if app != "Description" and app != "-----------":
-                print(app)
+        service.listRunningApplication()
     elif int(choose) == 2:
-        testtt = service.listRunningProcess()
-        sorted_processes = sorted(testtt, key=lambda process: process["Name"])
-        for process in sorted_processes:
-            print(process)
+        service.listRunningProcess()
     elif int(choose) == 4:
         service.screenshot()
     elif int(choose) == 3:
