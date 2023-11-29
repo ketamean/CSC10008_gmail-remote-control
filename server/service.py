@@ -112,7 +112,7 @@ def closeApplication(process_name):
     outputDir = os.path.join(saveDir, name)
 
     with open(outputDir, "w") as file:
-        file.write(process_name + "closed" + "\n")
+        file.write(process_name + " closed" + "\n")
 
 
 def openApplication(appName):
@@ -123,6 +123,6 @@ def openApplication(appName):
     outputDir = os.path.join(saveDir, name)
 
     with open(outputDir, "w") as file:
-        file.write(appName + "opened" + "\n")
+        file.write(appName + " opened" + "\n")
 
     AppOpener.open(appName.lower())

@@ -16,7 +16,7 @@ started = False
 timecount = 0
 while True:
     if started == True:
-        event, values = window.read(timeout=3000)
+        event, values = window.read(timeout=5000)
         server.CheckMail(creds)
         timecount = timecount + 1
     else:
