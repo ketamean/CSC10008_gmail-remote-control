@@ -20,7 +20,7 @@ from email.mime.text import MIMEText
 SCOPES = ["https://mail.google.com/"]
 
 
-def handle(myAr, mail):
+def handle(myAr, mail, msgId, threadId):
     print("Handling Mail")
     for task in myAr:
         if task.find("[key_logger]") != -1:
@@ -41,7 +41,7 @@ def handle(myAr, mail):
 
             with open(outputDir, "w") as file:
                 file.write("The computer is shutting down")
-            gmail_send_message(mail)
+            gmail_send_message(mail, msgId, threadId)
             service.shutdown()
         if task == "[log_out]":
             curDir = os.getcwd()
@@ -52,7 +52,7 @@ def handle(myAr, mail):
 
             with open(outputDir, "w") as file:
                 file.write("The computer is logging out")
-            gmail_send_message(mail)
+            gmail_send_message(mail, msgId, threadId)
             service.logout()
         if task.find("[start_app]") != -1:
             appName = task[12:]
@@ -60,14 +60,14 @@ def handle(myAr, mail):
         if task.find("[close_app]") != -1:
             appName = task[12:]
             service.closeApplication(appName)
-    gmail_send_message(mail)
+    gmail_send_message(mail, msgId, threadId)
 
 
 # def testoutput():
 #     print("hello may cau")
 
 
-def gmail_send_message(mail):
+def gmail_send_message(mail, messageId, threadId):
     if os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
 
@@ -77,7 +77,9 @@ def gmail_send_message(mail):
 
         message["To"] = mail
         message["From"] = "chiemthoica@gmail.com"
-        message["Subject"] = "Computer Remote Control Report"
+        message["Subject"] = "PCRC"
+        message["In-Reply-To"] = messageId
+        message["References"] = messageId
         content = "This is the result"
         body = MIMEText(content, "plain")
         message.attach(body)
@@ -132,7 +134,7 @@ def gmail_send_message(mail):
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
-        create_message = {"raw": encoded_message}
+        create_message = {"raw": encoded_message, "threadId": threadId}
         # pylint: disable=E1101
         send_message = (
             service.users().messages().send(userId="me", body=create_message).execute()
@@ -169,7 +171,14 @@ def CheckMail(creds):
                     .get(userId="me", id=message["id"])
                     .execute()
                 )
+                threadId = msg["threadId"]
                 email_data = msg["payload"]["headers"]
+                messageId = ""
+                for values in email_data:
+                    name = values["name"]
+                    if name == "Message-ID":
+                        messageId = values["value"]
+
                 for values in email_data:
                     name = values["name"]
                     if name == "From":
@@ -190,7 +199,9 @@ def CheckMail(creds):
                                     if text.find("div") == -1:
                                         myAr = text.splitlines()
                                         print(myAr)
-                                        handle(myAr, from_mail)
+                                        handle(myAr, from_mail, messageId, threadId)
+                                    if myAr[0] != "request":
+                                        continue
                                     # mark the message as read
                                     msg = (
                                         service.users()
@@ -210,7 +221,9 @@ def CheckMail(creds):
 
                             text = byte_code.decode("utf-8")
                             myAr = text.splitlines()
-                            handle(myAr, from_mail)
+                            if myAr[0] != "request":
+                                continue
+                            handle(myAr, from_mail, messageId, threadId)
 
                             # mark the message as read, handle and send gmail message
                             msg = (
@@ -245,7 +258,7 @@ def main():
         # Save the credentials for the next run
         with open("token.json", "w") as token:
             token.write(creds.to_json())
-
+    CheckMail(creds)
     return creds
 
 
