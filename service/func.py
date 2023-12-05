@@ -5,7 +5,8 @@ import logging
 import keyboard
 import cv2 as cv
 import time
-from AppOpener import open, close
+import AppOpener
+from AppOpener.features import AppNotFound
 from pynput.keyboard import Listener
 from PIL import ImageGrab
 from PIL import Image
@@ -96,23 +97,12 @@ def removeSpace(string):
 
 def closeApplication(process_name):
     process_name = removeSpace(process_name)
-    close(process_name.lower())
+    AppOpener.close(process_name.lower())
                 
                 
 def openApplication(appName):
-    # try:
-    #     subprocess.run(["where", appName], check=True, capture_output=True)
-    # except subprocess.CalledProcessError:
-    #     print(f"{appName} is not exist")
-    #     return 
-
-    open(appName.lower())
+    try:
+        AppOpener.open(appName.lower(), throw_error=True)
+    except AppNotFound:
+        return f"{appName} is not installed or cannot be found"
     
-    # isRunning = False    
-    # runningApps = listRunningProcess()
-    # for app in runningApps:
-    #     if app == appName:
-    #         isRunning = True
-                
-    # if isRunning == False:
-    #     print(f"{appName} is not exist")
