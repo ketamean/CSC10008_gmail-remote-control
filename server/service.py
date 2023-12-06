@@ -122,7 +122,9 @@ def openApplication(appName):
     name = "start_app" + str(id) + ".txt"
     outputDir = os.path.join(saveDir, name)
 
-    with open(outputDir, "w") as file:
-        file.write(appName + " opened" + "\n")
-
-    AppOpener.open(appName.lower())
+    try:
+        AppOpener.open(appName.lower(), throw_error=True, match_closest=True)
+        with open(outputDir, "w") as file:
+            file.write(appName + " opened" + "\n")
+    except Exception as er:
+        print(str(er))
