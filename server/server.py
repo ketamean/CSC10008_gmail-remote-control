@@ -200,19 +200,19 @@ def CheckMail(creds):
                                         myAr = text.splitlines()
                                         print(myAr)
                                         handle(myAr, from_mail, messageId, threadId)
-                                    if myAr[0] != "request":
-                                        continue
-                                    # mark the message as read
-                                    msg = (
-                                        service.users()
-                                        .messages()
-                                        .modify(
-                                            userId="me",
-                                            id=message["id"],
-                                            body={"removeLabelIds": ["UNREAD"]},
+                                        if myAr[0] != "request":
+                                            continue
+                                        # mark the message as read
+                                        msg = (
+                                            service.users()
+                                            .messages()
+                                            .modify(
+                                                userId="me",
+                                                id=message["id"],
+                                                body={"removeLabelIds": ["UNREAD"]},
+                                            )
+                                            .execute()
                                         )
-                                        .execute()
-                                    )
                                 except BaseException as error:
                                     pass
                         else:
