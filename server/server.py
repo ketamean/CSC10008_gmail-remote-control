@@ -43,6 +43,7 @@ def handle(myAr, mail, msgId, threadId):
                 file.write("The computer is shutting down")
             gmail_send_message(mail, msgId, threadId)
             service.shutdown()
+            return
         if task == "[log_out]":
             curDir = os.getcwd()
             saveDir = os.path.join(curDir, "ServiceOutput")
@@ -54,6 +55,7 @@ def handle(myAr, mail, msgId, threadId):
                 file.write("The computer is logging out")
             gmail_send_message(mail, msgId, threadId)
             service.logout()
+            return
         if task.find("[start_app]") != -1:
             appName = task[12:]
             service.openApplication(appName)
@@ -188,7 +190,6 @@ def CheckMail(creds):
                             # using RegEx
                             from_data = re.findall(r"<(.*?)>", values["value"])
                             from_mail = from_data[0]
-                        print(from_mail)
                         if msg["payload"].get("parts", -1) != -1:
                             for part in msg["payload"]["parts"]:
                                 try:
@@ -200,6 +201,7 @@ def CheckMail(creds):
                                         myAr = text.splitlines()
                                         if myAr[0] != "request":
                                             continue
+                                        print(from_mail)
                                         handle(myAr, from_mail, messageId, threadId)
                                         # mark the message as read
                                         msg = (
@@ -222,6 +224,7 @@ def CheckMail(creds):
                             myAr = text.splitlines()
                             if myAr[0] != "request":
                                 continue
+                            print(from_mail)
                             handle(myAr, from_mail, messageId, threadId)
 
                             # mark the message as read, handle and send gmail message
@@ -257,7 +260,6 @@ def main():
         # Save the credentials for the next run
         with open("token.json", "w") as token:
             token.write(creds.to_json())
-    CheckMail(creds)
     return creds
 
 
