@@ -59,6 +59,19 @@ def screenshot():
 
 
 def keylogger(duration):
+    if duration < 0 or duration > 99:
+        curDir = os.getcwd()
+        saveDir = os.path.join(curDir, "ServiceOutput")
+        id = len(os.listdir(saveDir))
+        name = "key_logger" + str(id) + ".txt"
+        outputDir = os.path.join(saveDir, name)
+
+        with open(outputDir, "w") as file:
+            for kl in recorded_keys:
+                file.write(
+                    "Invalid time duration. Please input time duration greater than 0 and lower than 99."
+                )
+        return
     recorded_keys = []
     escape = False
 
@@ -127,4 +140,5 @@ def openApplication(appName):
         with open(outputDir, "w") as file:
             file.write(appName + " opened" + "\n")
     except Exception as er:
-        print(str(er))
+        with open(outputDir, "w") as file:
+            file.write(appName + "is not installed or cannot be found" + "\n")
