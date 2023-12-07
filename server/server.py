@@ -47,7 +47,7 @@ def handle(myAr, mail, msgId, threadId):
                 file.write("The computer is shutting down")
             gmail_send_message(mail, msgId, threadId)
             service.shutdown()
-            return
+            pass
         if task == "[log_out]":
             curDir = os.getcwd()
             saveDir = os.path.join(curDir, "ServiceOutput")
@@ -59,7 +59,7 @@ def handle(myAr, mail, msgId, threadId):
                 file.write("The computer is logging out")
             gmail_send_message(mail, msgId, threadId)
             service.logout()
-            return
+            pass
         if task.find("[start_app]") != -1:
             appName = task[12:]
             service.openApplication(appName)

