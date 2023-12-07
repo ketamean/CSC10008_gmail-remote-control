@@ -116,7 +116,6 @@ def removeSpace(string):
 
 def closeApplication(process_name):
     process_name = removeSpace(process_name)
-    AppOpener.close(process_name.lower())
 
     curDir = os.getcwd()
     saveDir = os.path.join(curDir, "ServiceOutput")
@@ -124,8 +123,13 @@ def closeApplication(process_name):
     name = "closed" + str(id) + ".txt"
     outputDir = os.path.join(saveDir, name)
 
-    with open(outputDir, "w") as file:
-        file.write(process_name + " closed" + "\n")
+    try:
+        AppOpener.close(process_name.lower(), match_closest=True, throw_error=True)
+        with open(outputDir, "w") as file:
+            file.write(process_name + " closed" + "\n")
+    except Exception as er:
+        with open(outputDir, "w") as file:
+            file.write(process_name + "is not opened" + "\n")
 
 
 def openApplication(appName):
