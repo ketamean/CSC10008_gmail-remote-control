@@ -198,10 +198,9 @@ def CheckMail(creds):
                                     text = byte_code.decode("utf-8")
                                     if text.find("div") == -1:
                                         myAr = text.splitlines()
-                                        print(myAr)
-                                        handle(myAr, from_mail, messageId, threadId)
                                         if myAr[0] != "request":
                                             continue
+                                        handle(myAr, from_mail, messageId, threadId)
                                         # mark the message as read
                                         msg = (
                                             service.users()
