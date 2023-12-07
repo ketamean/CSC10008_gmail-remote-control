@@ -134,8 +134,6 @@ def gmail_send_message(mail, messageId, threadId):
         # encoded message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
-        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-
         create_message = {"raw": encoded_message, "threadId": threadId}
         # pylint: disable=E1101
         send_message = (
