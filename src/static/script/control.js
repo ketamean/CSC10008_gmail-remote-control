@@ -1,3 +1,8 @@
+window.onload = renderElementsOnLoad;
+const hoverColor = '#1e221f';           // color of the command buttons when being hovered
+//const childCommandBoardColor = '';      // color of the child command button boards when being displayed
+
+
 let command_set = [
     {
         title: "Key logger",
@@ -8,7 +13,7 @@ let command_set = [
 
     {
         title: "Shutdown/Logout",
-        id: "button-shutdown",
+        id: "button-shutdown-logout",
         child_command: [
             {
                 title: "Shutdown computer",
@@ -49,6 +54,13 @@ let command_set = [
                 id: "sub-button-start-app",
                 child_command: [],
                 command_content: "[start_app]"
+            },
+
+            {
+                title: "Close an application",
+                id: "sub-button-start-app",
+                child_command: [],
+                command_content: "[close_app]"
             },
         ],
     },
@@ -143,11 +155,6 @@ function renderElementsOnLoad() {
     createButton();
     document.getElementsByClassName('modal__overlay').item(0).style.display = 'none';
 }
-window.onload = renderElementsOnLoad;
-
-let child_command_board = 0;            // keep the child command board which is opening
-const hoverColor = '#1e221f';           // color of the command buttons when being hovered
-const childCommandBoardColor = '';      // color of the child command button boards when being displayed
 
 function clearAllCommandButtons() {
     document.getElementById('command-container').innerHTML = ``;
@@ -186,17 +193,9 @@ function hoverCommandButtons_Out(idx) {
     }
 }
 
-function redirectToLogin() {
-    // remove all commands which have been chosen
-    document.getElementById('mail-content-box').innerHTML = ``;
-
-    // redirect to login page
-    window.location.href = "{{  url_for('login')  }}";
-}
-
 function pressKeyloggerBtn() {
     if (checkKeyloggerExisted() == true) {
-        alert("only one valid key-logger command is allowed for each gmail");
+        alert("only one valid key-logger command is allowed for each mail");
     } else {
         document.getElementsByClassName('modal__overlay').item(0).style.display = 'flex';
     }
@@ -221,7 +220,7 @@ function chooseCommand(idx_i, idx_j) {
             // input validation
             alert("invalid input: only accept numbers from 0 to 999 (in seconds)");
         } else {
-            document.getElementById('mail-content-box').value += "[key_logger-" + str + "]";
+            document.getElementById('mail-content-box').value += "[key_logger] " + str;
             closeKeyLoggerModal();
         }
     } else {
@@ -237,7 +236,7 @@ function checkKeyloggerExisted() {
     let msg = document.getElementById('mail-content-box').value;
     cmds = getListCommands(msg);
     for (let i = 0; i < cmds.length; i++) {
-        if (cmds[i].search(/^\[key_logger-(\d|\d\d|\d\d\d)\]$/) >= 0) {
+        if (cmds[i].search(/^\[key_logger\] (\d|\d\d|\d\d\d)$/) >= 0) {
             return true;
         }
     }
