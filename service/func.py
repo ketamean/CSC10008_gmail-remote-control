@@ -6,6 +6,7 @@ import keyboard
 import cv2 as cv
 import time
 import AppOpener
+import pygetwindow
 from AppOpener.features import AppNotFound
 from pynput.keyboard import Listener
 from PIL import ImageGrab
@@ -21,19 +22,21 @@ def listRunningProcess():
     
     return runningProcess
 
+def getApplicationName(window_title):
+    last_dash_index = window_title.rfind(" - ") 
+    if last_dash_index != -1:
+        app_name = window_title[last_dash_index + 3:] 
+        return app_name.strip()
+    return window_title 
 
-def listRunningApplication():
-    runningApp = []
-    cmd = 'powershell "gps | where {$_.MainWindowTitle } | select Description'
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    stdout = proc.communicate()
-    
-    for line in stdout[0].decode().split('\n'):
-        line = line.strip()
-        if line:
-            runningApp.append(line)
-            
-    return runningApp 
+def listRunningApplications():
+    running_apps = set()
+    windows = pygetwindow.getAllTitles()
+    for window in windows:
+        app_name = getApplicationName(window)
+        running_apps.add(app_name)
+        
+    return sorted(list(running_apps))
 
 
 def screenshot():
