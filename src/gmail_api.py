@@ -92,11 +92,7 @@ def sendMail(receiver, sender, subject, msg_content, Creds, threadId = None):
             receiver=receiver, sender=sender, subject=subject, msg_content=msg_content
         )
         # encoded message
-        encoded_message = base64.urlsafe_b64encode(message.as_bytes()) \
-            .decode()
-
-        encoded_message = base64.urlsafe_b64encode(
-            message.as_bytes()).decode()
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
         create_message = {
             'raw': encoded_message,
@@ -107,22 +103,28 @@ def sendMail(receiver, sender, subject, msg_content, Creds, threadId = None):
                         (userId="me", body=create_message).execute())
         # print(F'Message Id: {send_message["id"]}')
     except HttpError as err:
-        # print(F'An error occurred: {error}')
+        print(F'An error occurred: {err}')
         return None, err
     return send_message, None
 
-def readRepliedMail(Creds, resultPath, threadId):
+def readMail_command(Creds, resultPath, threadId = None):
     """
-        return [str]msg | None
+        read the reply mail that contains results of the sent request.
+
+        [bool], None | [error]
+            True: if got and downloaded; otherwise, False
+            
+            None | [error]: None if there is no error
     """
     try:
         if threadId == None:
-            return None
+            return False, None
         Service = buildService(Creds)
         threadData = getThreadData(Creds=Creds, threadId=threadId)
         messages = threadData.get('messages', [])
         if not messages:
-            return None
+            # an empty thread
+            return False, None
         flag = 0
         for message in messages:
             lbls = message.get('labelIds', [])
@@ -135,47 +137,63 @@ def readRepliedMail(Creds, resultPath, threadId):
             
             # now, this is an UNREAD mail
             # check the subject
-            
             parts = message['payload'].get('parts', [])
             if parts == None:
-                return None
-            data = parts[0]['body'].get('data')
-            if data:
-                text = base64.urlsafe_b64decode(data).decode("utf-8")
-                myAr = text.splitlines()
-                if myAr[0] != 'This is the result':
-                    continue
-            else:
-                return None
+                # plain text mail => has no attachments or cannot obtain attachments
+                return False, None
+            flag = 0
+            for part in parts:
+                if part['filename'] == '':
+                    data = part['body'].get('data')
+                    if data:
+                        text = base64.urlsafe_b64decode(data).decode("utf-8")
+                        myAr = text.splitlines()
+                        if myAr[0] != 'This is the result':
+                            continue
+                        else:
+                            flag = flag + 1
+                            break
+                    else:
+                        # there is a part without filename but has no `data` key => incorrect behavior
+                        return False, None
+                break
+            if flag == 0:
+                # there is no text in the msg => invalid mail
+                return False, None
             for part in parts:
                 att_id = part['body'].get('attachmentId')
                 if not att_id:
                     continue
                 att = Service.users().messages().attachments().get(userId='me', messageId=message['id'],id=att_id).execute()
-                print(att['data'])
                 file_data = base64.urlsafe_b64decode(att['data'].encode('UTF-8'))
                 #path = resultPath + part['filename']
-                with open(os.path.join(resultPath, part['filename']), 'w') as f:
-                    f.write(base64.b64decode(att['data']).decode('utf-8'))
+                with open(os.path.join(resultPath, part['filename']), 'wb') as f:
+                    f.write(file_data)
                 # mark the message as read
-                tmp = (
-                    Service.users()
-                    .messages()
-                    .modify(
-                        userId="me",
-                        id=message["id"],
-                        body={"removeLabelIds": ["UNREAD"]},
-                    )
-                    .execute()
+            tmp = (
+                Service.users()
+                .messages()
+                .modify(
+                    userId="me",
+                    id=message["id"],
+                    body={"removeLabelIds": ["UNREAD"]},
                 )
-            return True
+                .execute()
+            )
+            return True, None
     except HttpError as error:
         print(f'An error occurred: {error}')
-        return error
+        return False, error
 
 def getThreadId(msg_obj):
-    return msg_obj.get('threadId')
+    try:
+        return msg_obj.get('threadId')
+    except:
+        return None
 
 def getThreadData(Creds, threadId):
-    Service = buildService(Creds)
-    return Service.users().threads().get(userId="me", id=threadId).execute()
+    try:
+        Service = buildService(Creds)
+        return Service.users().threads().get(userId="me", id=threadId).execute()
+    except:
+        return None

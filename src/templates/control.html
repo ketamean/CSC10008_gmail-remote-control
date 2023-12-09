@@ -41,6 +41,8 @@
                 {% elif send_error: %}
                     alert('Cannot send. Make sure that your mail does not violate the syntax or try loging in again.')
                     redirectToLogin()
+                {% elif timeouterror: %}
+                    alert('time out')
                 {% endif %}
             {% endblock %}
         </script>
@@ -69,7 +71,19 @@
                 </div>
         
                 <div>
-        
+                    <button
+                        type="button"
+                        id="instruction-button"
+                        style="border: none; background-color: transparent; display: flex; justify-content: center; padding: 0px;"
+                        onclick="showInstruction()"
+                    >
+                        <img
+                        src="{{ url_for('static', filename='asset/instruction-icon.png') }}"
+                        title="Instruction"
+                        alt="instruction"
+                        style="scale: 1;"
+                        />
+                    </button>
                 </div>
             </div> 
         
@@ -96,8 +110,8 @@
                     </div>
         
                     <div id="mail-content-and-send-btn">
-                        <form id="form-mail" action="{{ url_for('send_mail_handler') }}" method="post">
-                            <!-- onsubmit="return submitForm()" -->
+                        <form id="form-mail" action="{{ url_for('send_mail_handler') }}" method="post" onsubmit="return submitForm()">
+                            <!--  -->
                             <textarea
                                 class="text-box"
                                 id="mail-content-box"
@@ -116,23 +130,23 @@
             </div>    
         </main>
 
-        <div class="modal__overlay">
+        <div class="modal__overlay" id="modal__overlay__keylog">
             <div class="modal__inner">
                 <div class="modal__body">
                     <form>
                         <div style="width: 100%;">
-                            <label for="recipient-name" style="width: 100%;">How long do you want to get key log (in seconds, from 0 to 999)?</label>
+                            <label for="recipient-name" style="width: 100%;">How long do you want to get key log (in seconds, from 0 to 99)?</label>
                         </div>
                         <input type="number" name="time-keylog" id="textbox-keylog">
                     </form>
                 </div>
-                <div class="modal__footer">
+                <div class="modal__footer" style="justify-content: center;">
                     <button
                         type="button"
                         class="modal-button"
                         onclick="chooseCommand(0, -1)"
                     >
-                        Add command
+                        Add
                     </button>
                     <button
                         type="button"
@@ -144,34 +158,47 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal__overlay" id="modal__overlay__instruction">
+            <div class="modal__inner" style="height: 100%;">
+                <div class="modal__header">
+                    There are several applications we support:
+                </div>
+                <div class="modal__body" id="modal__body__instruction" style="flex-direction: column;">
+                    <!-- a list goes here -->
+                </div>
+                <div class="modal__footer">
+                    <button
+                        type="button"
+                        class="modal-button"
+                        onclick="closeInstruction()"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal__overlay" id="modal__overlay__aftersend">
+            <iframe
+                src="https://giphy.com/embed/cIbJ5bBlNLxynVGYzb"
+                width="480"
+                height="269"
+                frameBorder="0"
+                class="giphy-embed"
+                allowFullScreen
+            ></iframe>
+        </div>
         
         <script src="{{ url_for('static', filename='script/control.js') }}"></script>
         <script>
-            // function submitForm() {
-            //     // document.getElementsByTagName('body').item(0).innerHTML += `
-            //     //     <iframe
-            //     //         src="https://giphy.com/embed/cIbJ5bBlNLxynVGYzb"
-            //     //         width="480"
-            //     //         height="269"
-            //     //         frameBorder="0"
-            //     //         class="giphy-embed"
-            //     //         allowFullScreen
-            //     //     ></iframe>
-            //     // `;
-            //     document.getElementById('mail-content-box')
-            //     window.location.href = "{{  url_for('send_mail_handler')  }}";
-            //     return 1;
-            // }
-            {% block anonymous %}
-                {% if isAnonymous == True: %}
-                    document.getElementById('command-button-1').ariaDisabled;
-                {% endif %}
-            {% endblock %}
+            function submitForm() {
+                document.getElementById('modal__overlay__aftersend').style.display = 'flex';
+                window.location.href = "{{  url_for('send_mail_handler')  }}";
+                return 1;
+            }
             
             function redirectToLogin() {
-                // remove all commands which have been chosen
-                document.getElementById('mail-content-box').innerHTML = ``;
-
                 // redirect to login page
                 window.location.href = "{{  url_for('login')  }}";
             }

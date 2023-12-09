@@ -6,19 +6,20 @@ class Info:
     GmailAddress = None     # client's Gmail address
     Profile =  None         # is reserved for future use
     Creds = None
-    SendMsgObject = None    # Message object, including: 'id', 'threadId' and 'labelIds'
-    def __init__(self) -> None:
-        pass
+    SentMsgObject = None    # Message object, including: 'id', 'threadId' and 'labelIds'
+    Timer = 0               # [int] maximum ammount of time to wait the replied mail after sending request
 
 class Flag:
-    AuthenState = None  # keep the state of authentication
-    SendMsgError = None # error caused by sending messages; is None if there is no error
-    Anonymous = None    # mark if user is using app anonymously, True | None
+    AuthenState = None      # keep the state of authentication
+    SendMsgError = None     # error caused by sending messages; is None if there is no error
+    Anonymous = None        # mark if user is using app anonymously, True | None
     LoggedIn = None
-    def __init__(self) -> None:
-        pass
+    TimeOutRespond = False  # mark whether the process of getting respond after sending request is time-out
 
-def checkKeylogger(msg):
+def extractTimeKeylogger(msg: str):
+    return re.findall(r'\n*\s*\[key_logger\]\s+(\d|\d\d)\s*\n+', msg)
+
+def checkKeylogger(msg: str):
     """
         check whether there is a singular valid key-logger command
 
@@ -28,10 +29,11 @@ def checkKeylogger(msg):
 
         [`None`]    returns `None` if there is no key-logger command
     """
-    match = re.findall('/^[key_logger] (\d|\d\d|\d\d\d)$/', msg)
+    match = extractTimeKeylogger(msg)
+    # valid = re.findall('[0-9]', msg)
     if len(match) == 0:
         return None
-    if len(match) > 1:
+    if len(match) > 1: # or (len(match) == 1 and len(valid) > 2)
         return False
     return True
 
@@ -40,6 +42,7 @@ def resetUserInfo():
         reset user info after re-login
         [None]
     """
+    Info.Timer = 0
     Info.GmailAddress = None
     Info.Profile = None
     if os.path.exists('config/token.json'):
@@ -48,6 +51,7 @@ def resetUserInfo():
     Info.SendMsgObject = None
     Flag.LoggedIn = None
     Flag.SendMsgError = None
+    Flag.TimeOutRespond = False
 
 def getDownloadDir():
     """
@@ -58,7 +62,7 @@ def getDownloadDir():
     winreg.CloseKey(reg_key)
     return downloads_path
 
-def makeDir(path):
+def makeDir(path: str):
     """
         making a dir with the given path
         [bool] True if successfully created; otherwise, False
@@ -72,7 +76,7 @@ def makeDir(path):
 class StaticVar:
     val = None
 
-def resolveDupName(name):
+def resolveDupName(name: str):
     """
         resolve duplicated name when making dir
     """
@@ -90,10 +94,42 @@ def createResultDir():
     newDirName = 'Result'
     path = os.path.join(downloads_path, newDirName)
     while makeDir(path) == False:
-        newDirName = resolveDupName(newDirName)
-        path = os.path.join(downloads_path, newDirName)
+        name = resolveDupName(newDirName)
+        path = os.path.join(downloads_path, name)
     StaticVar.val = None
     return path
 
 def openFolder(abs_path):
     os.startfile(abs_path)
+
+def makeTextFile(dir_path: str, content: str, filename: str):
+    with open(os.path.join(dir_path, filename + '.txt'), 'w') as f:
+        f.write(content)
+
+def duration(start_time, end_time):
+    return end_time - start_time
+
+def calcMaxWaitTime(msg_content: str):
+    """
+        [int] seconds
+
+        we cannot permanently wait for the response after sending request
+
+        this function helps us to calc the maximum time to wait
+
+        suppose that:
+            
+            - it takes 15s to get the mail from mail server
+            - it takes 1.5s each command, excluding keylogger (relatively)
+            - it takes 0.8s to download result for each command
+
+        prerequiste: this function is called if and only if there is a singular valid key-logger command in the msg content
+    """
+    # extract the number in key-logger command
+    time_keylog = extractTimeKeylogger(msg=msg_content)
+    msgs = [el for el in msg_content.splitlines() if el != '']
+    
+    if len(time_keylog) == 1:
+        return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs) + int(time_keylog[0])
+    return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs)
+    
