@@ -1,20 +1,31 @@
 import os
 import re
 import winreg
+import gmail_api
+
+ANONYMOUS_HTML_FILENAME = 'control_anonymous.html'
+FULL_HTML_FILENAME = 'control_full.html'
 
 class Info:
-    GmailAddress = None     # client's Gmail address
-    Profile =  None         # is reserved for future use
+    GmailAddress = None             # client's Gmail address
+    Profile =  None                 # is reserved for future use
     Creds = None
-    SentMsgObject = None    # Message object, including: 'id', 'threadId' and 'labelIds'
-    Timer = 0               # [int] maximum ammount of time to wait the replied mail after sending request
+    SentMsgObject = None            # Message object, including: 'id', 'threadId' and 'labelIds'
+    Timer = 0                       # [int] maximum ammount of time to wait the replied mail after sending request
+    HTMLFileName = None             # [str] name of the html file to be rendered
 
 class Flag:
-    AuthenState = None      # keep the state of authentication
-    SendMsgError = None     # error caused by sending messages; is None if there is no error
-    Anonymous = None        # mark if user is using app anonymously, True | None
+    # process flag
+    SendMsgError = None             # error caused by sending messages; is None if there is no error
+    TimeOutRespond = False          # mark whether the process of getting respond after sending request is time-out
+
+    # login flag
+    AuthenState = None              # keep the state of authentication
+    Anonymous = None                # mark if user is using app anonymously, True | None
     LoggedIn = None
-    TimeOutRespond = False  # mark whether the process of getting respond after sending request is time-out
+    Register = False                # register result: True if success; otherwise, False
+    RememberAccount = False         # mark if remember user account (do not delete token.json file)
+    LoginAuthentication =  False    # True if the account has been registered and allowed to log in; if not, False
 
 def extractTimeKeylogger(msg: str):
     return re.findall(r'\n*\s*\[key_logger\]\s+(\d|\d\d)\s*\n+', msg)
@@ -37,7 +48,7 @@ def checkKeylogger(msg: str):
         return False
     return True
 
-def resetUserInfo():
+def resetUserInfo(del_token):
     """
         reset user info after re-login
         [None]
@@ -45,7 +56,7 @@ def resetUserInfo():
     Info.Timer = 0
     Info.GmailAddress = None
     Info.Profile = None
-    if os.path.exists('config/token.json'):
+    if del_token and os.path.exists('config/token.json'):
         os.remove('config/token.json')
     Info.Creds = None
     Info.SendMsgObject = None
@@ -109,27 +120,27 @@ def makeTextFile(dir_path: str, content: str, filename: str):
 def duration(start_time, end_time):
     return end_time - start_time
 
-def calcMaxWaitTime(msg_content: str):
-    """
-        [int] seconds
+# def calcMaxWaitTime(msg_content: str):
+#     """
+#         [int] seconds
 
-        we cannot permanently wait for the response after sending request
+#         we cannot permanently wait for the response after sending request
 
-        this function helps us to calc the maximum time to wait
+#         this function helps us to calc the maximum time to wait
 
-        suppose that:
+#         suppose that:
             
-            - it takes 15s to get the mail from mail server
-            - it takes 1.5s each command, excluding keylogger (relatively)
-            - it takes 0.8s to download result for each command
+#             - it takes 15s to get the mail from mail server
+#             - it takes 1.5s each command, excluding keylogger (relatively)
+#             - it takes 0.8s to download result for each command
 
-        prerequiste: this function is called if and only if there is a singular valid key-logger command in the msg content
-    """
-    # extract the number in key-logger command
-    time_keylog = extractTimeKeylogger(msg=msg_content)
-    msgs = [el for el in msg_content.splitlines() if el != '']
+#         prerequiste: this function is called if and only if there is a singular valid key-logger command in the msg content
+#     """
+#     # extract the number in key-logger command
+#     time_keylog = extractTimeKeylogger(msg=msg_content)
+#     msgs = [el for el in msg_content.splitlines() if el != '']
     
-    if len(time_keylog) == 1:
-        return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs) + int(time_keylog[0])
-    return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs)
+#     if len(time_keylog) == 1:
+#         return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs) + int(time_keylog[0])
+#     return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs)
     

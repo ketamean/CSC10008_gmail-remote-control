@@ -42,7 +42,7 @@
                     alert('Cannot send. Make sure that your mail does not violate the syntax or try loging in again.')
                     redirectToLogin()
                 {% elif timeouterror: %}
-                    alert('time out')
+                    alert('Time out')
                 {% endif %}
             {% endblock %}
         </script>
@@ -55,7 +55,7 @@
                         type="button"
                         id="back-button"
                         style="border: none; background-color: transparent; display: flex; justify-content: center; padding: 0px;"
-                        onclick="redirectToLogin()"
+                        onclick="clickLogOutButton()"
                     >
                         <img
                         src="{{ url_for('static', filename='asset/back-icon.png') }}"
@@ -110,7 +110,7 @@
                     </div>
         
                     <div id="mail-content-and-send-btn">
-                        <form id="form-mail" action="{{ url_for('send_mail_handler') }}" method="post" onsubmit="return submitForm()">
+                        <form id="form-mail" action="{{ url_for('send_mail_handler') }}" method="post" onsubmit="return submitRequest()">
                             <!--  -->
                             <textarea
                                 class="text-box"
@@ -123,9 +123,9 @@
                         </form>
                     </div>
         
-                    <div id="alert-box">
+                    <!-- <div id="alert-box">
                         PLEASE DO-<span style="color: red;">NOT</span>-VIOLATE THE SYNTAX!
-                    </div>
+                    </div> -->
                 </div>
             </div>    
         </main>
@@ -189,10 +189,26 @@
                 allowFullScreen
             ></iframe>
         </div>
+
+        <div class="modal__overlay" id="modal__overlay__logout">
+            <div class="modal__inner">
+                <div class="modal__body">
+                    Do you want to remember this account?
+                </div>
+                <div class="modal__footer" style="justify-content: center; margin: 10px; display: flex; justify-content: space-between;">
+                    <form action="{{ url_for('rememberUser_YES') }}" method="post">
+                        <input type="submit" value="Yes" id="remember-yes-btn">
+                    </form>
+                    <form action="{{ url_for('rememberUser_NO') }}" method="post">
+                        <input type="submit" value="No" id="remember-no-btn">
+                    </form>
+                </div>    
+            </div>
+        </div>
         
-        <script src="{{ url_for('static', filename='script/control.js') }}"></script>
+        <script src="{{ url_for('static', filename='script/control_full.js') }}"></script>
         <script>
-            function submitForm() {
+            function submitRequest() {
                 document.getElementById('modal__overlay__aftersend').style.display = 'flex';
                 window.location.href = "{{  url_for('send_mail_handler')  }}";
                 return 1;

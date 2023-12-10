@@ -1,7 +1,7 @@
 window.onload = renderElementsOnLoad;
 
 class Info {
-    static hoverColor = '#1e221f'; // color of the command buttons when being hovered
+    static hoverColor = '#aae49f'; // color of the command buttons when being hovered
     static command_set = [
         {
             title: "Key logger",
@@ -101,6 +101,10 @@ class Info {
     static show_alert_application;                  // mark if show alert when invoking close/start app
 }
 
+function clickLogOutButton() {
+    document.getElementById('modal__overlay__logout').style.display = 'flex';
+}
+
 function createModalInstruction() {
     text = `
         <ol>
@@ -156,7 +160,6 @@ function createButton() {
                     <div
                         class="child-command-board d-none"
                         id="child-command-board-${i}"
-                        style="border-radius: 0px 0px 10px 10px;"
                     >
                 `;
                 for (let j = 0; j < Info.command_set[i].child_command.length; j++) {
@@ -190,9 +193,6 @@ function renderElementsOnLoad() {
     createButton();
     createModalInstruction();
     Info.show_alert_application = true;
-    document.getElementById('modal__overlay__keylog').style.display = 'none';
-    document.getElementById('modal__overlay__aftersend').style.display = 'none';
-    document.getElementById('modal__overlay__instruction').style.display = 'none';
 }
 
 function clearAllCommandButtons() {
@@ -205,14 +205,14 @@ function updateChildCommandBoard(idx) {
     if (Info.childCommandBoardOpening[idx] == 0) {
         // was closing ==>> need to be opened
         Info.childCommandBoardOpening[idx] = 1;
-        btn.style.borderRadius = '10px 10px 0px 0px'
+        btn.style.borderRadius = '100px 100px 0px 0px'
         btn.style.backgroundColor = Info.hoverColor;
         board.classList.remove("d-none");
     } else {
         // was opening ==>> need to be closed
         Info.childCommandBoardOpening[idx] = 0;
-        btn.style.borderRadius = '10px 10px 10px 10px'
-        btn.style.backgroundColor = 'transparent';
+        btn.style.borderRadius = '100px'
+        btn.style.backgroundColor = '#7f9f94e1';
         board.classList.add("d-none");
     }
 }
@@ -223,7 +223,7 @@ function hoverCommandButtons_In(idx) {
 
 function hoverCommandButtons_Out(idx) {
     if (Info.childCommandBoardOpening[idx] == 0) {
-        document.getElementById('command-button-' + String(idx)).style.backgroundColor = 'transparent';
+        document.getElementById('command-button-' + String(idx)).style.backgroundColor = '#7f9f94e1';
     } else {
         hoverCommandButtons_In(idx);
     }

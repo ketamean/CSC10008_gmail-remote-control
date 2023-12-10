@@ -1,6 +1,7 @@
 body {
     display: flex;
-    background-color: #212121;
+    /* background-color: #212121; */
+    background-color: #5a796e;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -10,9 +11,9 @@ body {
 }
 
 main {
-    width: 70vw;
+    width: 90vw;
     height: 95vh;
-    background-color: #454545;
+    background-color: #dfffff;
     padding: 5px;
 }
 
