@@ -43,6 +43,8 @@
                     redirectToLogin()
                 {% elif timeouterror: %}
                     alert('Time out')
+                {% elif successRequest: %}
+                    alert('Done. All the result files are downloaded.')
                 {% endif %}
             {% endblock %}
         </script>
@@ -186,6 +188,7 @@
                 height="269"
                 frameBorder="0"
                 class="giphy-embed"
+                style="border-radius: 100px;"
                 allowFullScreen
             ></iframe>
         </div>

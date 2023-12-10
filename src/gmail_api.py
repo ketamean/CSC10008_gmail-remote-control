@@ -210,9 +210,11 @@ def readMail_register(Creds, threadId):
                 # plain text mail
                 content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode("utf-8")
                 if content == 'added' or content == 'already existed':
-                    flag = True
+                    markMsgAsRead(Creds=Creds, msg_obj=message)
+                    return True
                 else:
-                    flag = False
+                    markMsgAsRead(Creds=Creds, msg_obj=message)
+                    return False
             else:
                 # multipart mail
                 for part in parts:
@@ -220,15 +222,13 @@ def readMail_register(Creds, threadId):
                     if data:
                         content = base64.urlsafe_b64decode(data).decode("utf-8")
                         if content == 'added' or content == 'already existed':
-                            flag = True
-                            break
+                            markMsgAsRead(Creds=Creds, msg_obj=message)
+                            return True
                         else:
-                            flag = False
-            if flag == 1:
-                # mark the message as read
-                markMsgAsRead(Creds=Creds, msg_obj=message)
-                break
-        return flag
+                            markMsgAsRead(Creds=Creds, msg_obj=message)
+                            return False
+            markMsgAsRead(Creds=Creds, msg_obj=message)
+        return None
     except HttpError as error:
         print(f'An error occurred: {error}')
         return error

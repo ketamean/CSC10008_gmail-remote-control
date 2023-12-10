@@ -45,9 +45,13 @@ def register():
     )
     if err:
         return redirect( url_for('login') )
-    res = gmail_api.readMail_register(
+    res = ModuleNotFoundError
+    while True:
+        res = gmail_api.readMail_register(
         Creds=helper.Info.Creds, threadId=gmail_api.getThreadId(msg_obj)
     )
+        if res != None:
+            break
     if res == True:
         helper.Info.Creds = creds
         helper.Info.Profile = profile
@@ -83,14 +87,20 @@ def login():
         helper.Flag.AuthenState = None
         if helper.Flag.Anonymous == True:
             helper.Flag.Anonymous = None
-            return render_template("login.html", successAuthen=False, isAnonymous=True, remember_me=helper.Flag.RememberAccount)
+            return render_template(
+                "login.html", successAuthen=False, isAnonymous=True, remember_me=helper.Flag.RememberAccount
+            )
         else:
-            return render_template("login.html", successAuthen=False, isAnonymous=False, remember_me=helper.Flag.RememberAccount)
+            return render_template(
+                "login.html", successAuthen=False, isAnonymous=False, remember_me=helper.Flag.RememberAccount
+            )
     elif (helper.Flag.Register != False and helper.Flag.Register != True):
         # helper.Flag.Register is containing an error while register
-        return render_template("login.html", register_error=True, remember_me=helper.Flag.RememberAccount)
-    else:
-        return render_template("login.html", remember_me=helper.Flag.RememberAccount)
+        return render_template(
+            "login.html", register_error=True, remember_me=helper.Flag.RememberAccount
+        )
+    # else:
+    return render_template("login.html", remember_me=helper.Flag.RememberAccount)
 
 @app.route("/control_anonymous/", methods=['GET', 'POST'])
 def control_anonymous():
@@ -109,15 +119,21 @@ def control_with_gmail():
     helper.Flag.LoginAuthentication = None
     initAccount('token')
     # msg_obj, err = gmail_api.sendMail(
-    #     receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject='PCRC authentication', msg_content=helper.Info.GmailAddress,
-    #     Creds=helper.Info.Creds
+    #     receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject='PCRC authentication',
+    #     msg_content=helper.Info.GmailAddress, Creds=helper.Info.Creds
     # )
     # if err:
     #     print('Cannot authenticate account.')
     #     return redirect( url_for('login') )
-    # auth = gmail_api.readMail_authentication(Creds=helper.Info.Creds, threadId=gmail_api.getThreadId(msg_obj=msg_obj))
+    # auth = None
+    # while True:
+    #     auth = gmail_api.readMail_authentication(
+    #         Creds=helper.Info.Creds, threadId=gmail_api.getThreadId(msg_obj=msg_obj)
+    #     )
+    #     if auth != None:
+    #         break
     # print(auth)
-    auth = True # temp
+    auth = True             # temp
     if not auth:
         helper.Flag.AuthenState = 'failed'
         helper.Flag.Anonymous = False
@@ -131,19 +147,29 @@ def control_with_gmail():
 
 @app.route("/control/", methods=['GET', 'POST'])
 def control():
+    req_success = helper.Flag.SuccessRequest
+    helper.Flag.SuccessRequest = False
     try:
         if helper.Info.Profile == None or helper.Flag.LoggedIn != True:
             return render_template(helper.Info.HTMLFileName, isAuthor=False)
         elif helper.Flag.SendMsgError:
-            return render_template(helper.Info.HTMLFileName, isAuthor=True, send_error=True)
+            helper.Flag.SendMsgError = None
+            return render_template(
+                helper.Info.HTMLFileName, send_error=True, client_email=helper.Info.GmailAddress,
+                isAuthor=True, isAnonymous=helper.Flag.Anonymous, timeouterror=helper.Flag.TimeOutRespond
+            )
         else:
-            return render_template(helper.Info.HTMLFileName, client_email=helper.Info.GmailAddress, send_error=None, isAuthor=True, isAnonymous=helper.Flag.Anonymous, timeouterror=helper.Flag.TimeOutRespond)
+            return render_template(
+                helper.Info.HTMLFileName, client_email=helper.Info.GmailAddress, send_error=None, isAuthor=True,
+                isAnonymous=helper.Flag.Anonymous, timeouterror=helper.Flag.TimeOutRespond, successRequest=req_success
+            )
     except Exception as e:
         print(e)
         return redirect( url_for('login') )
 
 @app.route("/send_mail_handler/", methods=['GET', 'POST'])
 def send_mail_handler():
+    helper.Flag.SuccessRequest = False
     try:
         msg = request.form.get('msg-content')
         if not msg:
@@ -161,8 +187,8 @@ def send_mail_handler():
             return redirect( url_for('control') )
         # helper.Info.Timer = helper.calcMaxWaitTime(msg)
         helper.Info.SentMsgObject, helper.Flag.SendMsgError = gmail_api.sendMail(
-            receiver=SERVER_GMAIL_ADDRESS, sender=helper.Info.GmailAddress, subject=SubjectMail.COMMAND, msg_content=msg,
-            Creds=helper.Info.Creds
+            receiver=SERVER_GMAIL_ADDRESS, sender=helper.Info.GmailAddress, subject=SubjectMail.COMMAND,
+            msg_content=msg, Creds=helper.Info.Creds
         )
         if helper.Flag.SendMsgError:
             print('Msg Error: ', helper.Flag.SendMsgError)
@@ -186,7 +212,8 @@ def get_response():
             #     helper.Flag.TimeOutRespond = True
             #     return redirect( url_for('control') )
             flag, err = gmail_api.readMail_command(
-                Creds=helper.Info.Creds, resultPath=resultPath, threadId=gmail_api.getThreadId(helper.Info.SentMsgObject),
+                Creds=helper.Info.Creds, resultPath=resultPath,
+                threadId=gmail_api.getThreadId(helper.Info.SentMsgObject),
             )
             if flag == True:
                 break
@@ -197,6 +224,7 @@ def get_response():
             time.sleep(2)
         helper.Info.SentMsgObject = None
         helper.Info.Timer = 0
+        helper.Flag.SuccessRequest = True
         helper.openFolder(resultPath)
         return redirect( url_for('control') )
     except Exception as e:

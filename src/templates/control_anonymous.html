@@ -43,6 +43,8 @@
                     redirectToLogin()
                 {% elif timeouterror: %}
                     alert('Time out')
+                {% elif successRequest: %}
+                    alert('Done. All the result files are downloaded.')
                 {% endif %}
             {% endblock %}
         </script>
@@ -109,10 +111,6 @@
                             <input type="submit" id="send-btn" value="Send">
                         </form>
                     </div>
-        
-                    <!-- <div id="alert-box">
-                        PLEASE DO-<span style="color: red;">NOT</span>-VIOLATE THE SYNTAX!
-                    </div> -->
                 </div>
             </div>    
         </main>
@@ -131,7 +129,7 @@
                     <button
                         type="button"
                         class="modal-button"
-                        onclick="chooseCommand(0, -1)"
+                        onclick="chooseCommand(0)"
                     >
                         Add
                     </button>
@@ -155,6 +153,7 @@
                 frameBorder="0"
                 class="giphy-embed"
                 allowFullScreen
+                style="border-radius: 100px;"
             ></iframe>
         </div>
         
@@ -170,6 +169,22 @@
                 // redirect to login page
                 window.location.href = "{{  url_for('login')  }}";
             }
+
+            document.getElementById('modal__overlay__keylog').addEventListener('keydown', function(event) {
+                // Check if the pressed key is Enter (keyCode 13)
+                if (event.keyCode === 13) {
+                    // Prevent the default behavior of the Enter key
+                    event.preventDefault();
+                }
+            });
+
+            document.getElementById('send-btn').addEventListener('keydown', function(event) {
+                // Check if the pressed key is Enter (keyCode 13)
+                if (event.keyCode === 13) {
+                    // Prevent the default behavior of the Enter key
+                    event.preventDefault();
+                }
+            });
         </script>
     </body>
 </html>

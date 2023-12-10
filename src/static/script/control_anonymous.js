@@ -110,11 +110,11 @@ function chooseCommand(i) {
 
     if (i == 0) {
         let str = document.getElementById('textbox-keylog').value;
-        if (isNaN(str) == true || str.length > 3 || str.length == 0 || str < 0) {
+        if (isNaN(str) == true || str > 99 || str.length == 0 || str < 0 || str.includes('.')) {
             // input validation
-            alert("invalid input: only accept numbers from 0 to 99 (in seconds)");
+            alert("invalid input: only accept integers from 0 to 99 (in seconds)");
         } else {
-            document.getElementById('mail-content-box').value += "[key_logger] " + str;
+            document.getElementById('mail-content-box').value += "[key_logger] " + str + '\n';
             closeKeyLoggerModal();
         }
     } else {
@@ -123,11 +123,18 @@ function chooseCommand(i) {
     document.getElementById('mail-content-box').value = document.getElementById('mail-content-box').value.replace(/\n+/g, '\n')
 }
 
+function isKeyLogger(s) {
+    if (s.search(/\n*\s*\[key_logger\]\s+(\d|\d\d)$/) >= 0 && s.includes('.') == false) {
+        return true;
+    }
+    return false;
+}
+
 function checkKeyloggerExisted() {
     let msg = document.getElementById('mail-content-box').value;
     cmds = getListCommands(msg);
     for (let i = 0; i < cmds.length; i++) {
-        if (cmds[i].search(/^\[key_logger\] (\d|\d\d)$/) >= 0) {
+        if ( isKeyLogger(cmds[i]) ) {
             return true;
         }
     }

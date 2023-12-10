@@ -18,6 +18,7 @@ class Flag:
     # process flag
     SendMsgError = None             # error caused by sending messages; is None if there is no error
     TimeOutRespond = False          # mark whether the process of getting respond after sending request is time-out
+    SuccessRequest = False          # mark whether the process of receiving response after sending request is done (all the files are downloaded)
 
     # login flag
     AuthenState = None              # keep the state of authentication
@@ -111,7 +112,7 @@ def createResultDir():
     return path
 
 def openFolder(abs_path):
-    os.startfile(abs_path)
+    os.startfile(filepath=abs_path, operation="open")
 
 def makeTextFile(dir_path: str, content: str, filename: str):
     with open(os.path.join(dir_path, filename + '.txt'), 'w') as f:

@@ -127,6 +127,8 @@
     display: flex;
     flex-direction: column;
 
+    background-color: #89b8a9;
+
     justify-content: center;
 }
 
@@ -145,7 +147,7 @@
 
 #mail-from-box {
     justify-content: center;
-    border-radius: 20px 20px 7px 7px;
+    border-radius: 20px 20px 0px 0px;
     margin-bottom: 2px;
 }
 
@@ -160,7 +162,7 @@
 #mail-content-box {
     height: 100%;
     width: 100%;
-    border-radius: 7px 7px 20px 20px;
+    border-radius: 0px 0px 20px 20px;
     font-weight: 0;
     overflow-y: auto;
     z-index: 0;
