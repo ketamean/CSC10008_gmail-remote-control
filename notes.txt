@@ -1,5 +1,0 @@
-remember me
-
-register
-
-modify login layout
