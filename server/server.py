@@ -415,7 +415,17 @@ def main():
         # Save the credentials for the next run
         with open("token.json", "w") as token:
             token.write(creds.to_json())
+        # update usermail
+        with open("usermail.txt", "r") as mailFile:
+            for mail in mailFile:
+                globalMailList.append(mail.rstrip())
     return creds
+
+
+def program_destructor():
+    with open("usermail.txt", "w") as mailFile:
+        for mail in globalMailList:
+            mailFile.write(mail + "\n")
 
 
 if __name__ == "__main__":

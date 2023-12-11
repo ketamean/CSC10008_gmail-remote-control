@@ -34,3 +34,5 @@ while True:
         timecount = 0
         window["-OUTPUT-"].update("")
 window.close()
+
+server.program_destructor()
