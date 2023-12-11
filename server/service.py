@@ -119,10 +119,10 @@ def closeApplication(process_name):
     try:
         AppOpener.close(process_name.lower(), match_closest=True, throw_error=True)
         with open(outputDir, "w") as file:
-            file.write(process_name + " closed" + "\n")
+            file.write(process_name + " is closed" + "\n")
     except Exception as er:
         with open(outputDir, "w") as file:
-            file.write(process_name + " is not opened" + "\n")
+            file.write(process_name + " is not running or not opened" + "\n")
 
 
 def openApplication(appName):
