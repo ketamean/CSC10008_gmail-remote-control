@@ -211,7 +211,7 @@ def HandleLoginMailAddress(myMail):
 def CheckLoginMail(creds):
     try:
         service = build("gmail", "v1", credentials=creds)
-        result = (
+        results = (
             service.users()
             .messages()
             .list(
@@ -220,16 +220,17 @@ def CheckLoginMail(creds):
                 includeSpamTrash="false",
                 q="PCRC authentication",
             )
-            .excute()
+            .execute()
         )
-        messages = result.get("messages", [])
+        messages = results.get("messages", [])
         if messages:
+            print("there is message")
             for message in messages:
                 msg = (
                     service.users()
                     .messages()
                     .get(userId="me", id=message["id"])
-                    .excute()
+                    .execute()
                 )
                 threadId = msg["threadId"]
                 email_data = msg["payload"]["headers"]
@@ -238,78 +239,82 @@ def CheckLoginMail(creds):
                     name = values["name"]
                     if name == "Message-ID":
                         messageId = values["value"]
-                        for values in email_data:
-                            name = values["name"]
-                            if name == "From":
-                                if values["value"].find("<") == -1:
-                                    from_mail = values["value"]
-                                else:
-                                    # using RegEx
-                                    from_data = re.findall(r"<(.*?)>", values["value"])
-                                    from_mail = from_data[0]
-                                if msg["payload"].get("parts", -1) != -1:
-                                    for part in msg["payload"]["parts"]:
-                                        try:
-                                            data = part["body"]["data"]
-                                            byte_code = base64.urlsafe_b64decode(data)
 
-                                            text = byte_code.decode("utf-8")
-                                            if text.find("div") == -1:
-                                                myMail = text.rstrip()
-                                                myReplyMailContent = (
-                                                    HandleLoginMailAddress(myMail)
-                                                )
-                                                gmail_send_normal_message(
-                                                    mail=from_mail,
-                                                    messageId=messageId,
-                                                    threadId=threadId,
-                                                    content=myReplyMailContent,
-                                                )
-
-                                                print(from_mail)
-
-                                                # mark the message as read
-                                                msg = (
-                                                    service.users()
-                                                    .messages()
-                                                    .modify(
-                                                        userId="me",
-                                                        id=message["id"],
-                                                        body={
-                                                            "removeLabelIds": ["UNREAD"]
-                                                        },
-                                                    )
-                                                    .execute()
-                                                )
-                                        except BaseException as error:
-                                            pass
-                                else:
-                                    data = msg["payload"]["body"]["data"]
+                for values in email_data:
+                    name = values["name"]
+                    if name == "From":
+                        if values["value"].find("<") == -1:
+                            from_mail = values["value"]
+                        else:
+                            # using RegEx
+                            from_data = re.findall(r"<(.*?)>", values["value"])
+                            from_mail = from_data[0]
+                        if msg["payload"].get("parts", -1) != -1:
+                            for part in msg["payload"]["parts"]:
+                                try:
+                                    data = part["body"]["data"]
                                     byte_code = base64.urlsafe_b64decode(data)
 
                                     text = byte_code.decode("utf-8")
-                                    myMail = text.rstrip()
-                                    myReplyMailContent = HandleLoginMailAddress(myMail)
-                                    gmail_send_normal_message(
-                                        mail=from_mail,
-                                        messageId=messageId,
-                                        threadId=threadId,
-                                        content=myReplyMailContent,
-                                    )
-
-                                    print(from_mail)
-
-                                    # mark the message as read, handle and send gmail message
-                                    msg = (
-                                        service.users()
-                                        .messages()
-                                        .modify(
-                                            userId="me",
-                                            id=message["id"],
-                                            body={"removeLabelIds": ["UNREAD"]},
+                                    if (
+                                        text.find("div") == -1
+                                        and text.find("YES") == -1
+                                        and text.find("NO") == -1
+                                    ):
+                                        myNewMail = text.rstrip()
+                                        myReplyMailContent = HandleLoginMailAddress(
+                                            myNewMail
                                         )
-                                        .execute()
+                                        gmail_send_normal_message(
+                                            mail=from_mail,
+                                            messageId=messageId,
+                                            threadId=threadId,
+                                            content=myReplyMailContent,
+                                            subj="PCRC authentication",
+                                        )
+                                        print(from_mail)
+                                        # mark the message as read
+                                        msg = (
+                                            service.users()
+                                            .messages()
+                                            .modify(
+                                                userId="me",
+                                                id=message["id"],
+                                                body={"removeLabelIds": ["UNREAD"]},
+                                            )
+                                            .execute()
+                                        )
+                                except BaseException as error:
+                                    pass
+                        else:
+                            data = msg["payload"]["body"]["data"]
+                            byte_code = base64.urlsafe_b64decode(data)
+
+                            text = byte_code.decode("utf-8")
+                            if text.find("YES") == -1 and text.find("NO") == -1:
+                                myNewMail = text.rstrip()
+                                myReplyMailContent = HandleLoginMailAddress(myNewMail)
+                                gmail_send_normal_message(
+                                    mail=from_mail,
+                                    messageId=messageId,
+                                    threadId=threadId,
+                                    content=myReplyMailContent,
+                                    subj="PCRC authentication",
+                                )
+
+                                print(from_mail)
+
+                                # mark the message as read, handle and send gmail message
+                                msg = (
+                                    service.users()
+                                    .messages()
+                                    .modify(
+                                        userId="me",
+                                        id=message["id"],
+                                        body={"removeLabelIds": ["UNREAD"]},
                                     )
+                                    .execute()
+                                )
 
     except HttpError as error:
         print(f"An error occurred: {error}")
@@ -318,7 +323,7 @@ def CheckLoginMail(creds):
 def CheckRegisterMail(creds):
     try:
         service = build("gmail", "v1", credentials=creds)
-        result = (
+        results = (
             service.users()
             .messages()
             .list(
@@ -327,16 +332,17 @@ def CheckRegisterMail(creds):
                 includeSpamTrash="false",
                 q="PCRC register",
             )
-            .excute()
+            .execute()
         )
-        messages = result.get("messages", [])
+        messages = results.get("messages", [])
         if messages:
+            print("there is message")
             for message in messages:
                 msg = (
                     service.users()
                     .messages()
                     .get(userId="me", id=message["id"])
-                    .excute()
+                    .execute()
                 )
                 threadId = msg["threadId"]
                 email_data = msg["payload"]["headers"]
@@ -345,80 +351,84 @@ def CheckRegisterMail(creds):
                     name = values["name"]
                     if name == "Message-ID":
                         messageId = values["value"]
-                        for values in email_data:
-                            name = values["name"]
-                            if name == "From":
-                                if values["value"].find("<") == -1:
-                                    from_mail = values["value"]
-                                else:
-                                    # using RegEx
-                                    from_data = re.findall(r"<(.*?)>", values["value"])
-                                    from_mail = from_data[0]
-                                if msg["payload"].get("parts", -1) != -1:
-                                    for part in msg["payload"]["parts"]:
-                                        try:
-                                            data = part["body"]["data"]
-                                            byte_code = base64.urlsafe_b64decode(data)
 
-                                            text = byte_code.decode("utf-8")
-                                            if text.find("div") == -1:
-                                                myNewMail = text.rstrip()
-                                                myReplyMailContent = (
-                                                    HandleRegisterMailAddress(myNewMail)
-                                                )
-                                                gmail_send_normal_message(
-                                                    mail=from_mail,
-                                                    messageId=messageId,
-                                                    threadId=threadId,
-                                                    content=myReplyMailContent,
-                                                )
-
-                                                print(from_mail)
-
-                                                # mark the message as read
-                                                msg = (
-                                                    service.users()
-                                                    .messages()
-                                                    .modify(
-                                                        userId="me",
-                                                        id=message["id"],
-                                                        body={
-                                                            "removeLabelIds": ["UNREAD"]
-                                                        },
-                                                    )
-                                                    .execute()
-                                                )
-                                        except BaseException as error:
-                                            pass
-                                else:
-                                    data = msg["payload"]["body"]["data"]
+                for values in email_data:
+                    name = values["name"]
+                    if name == "From":
+                        if values["value"].find("<") == -1:
+                            from_mail = values["value"]
+                        else:
+                            # using RegEx
+                            from_data = re.findall(r"<(.*?)>", values["value"])
+                            from_mail = from_data[0]
+                        if msg["payload"].get("parts", -1) != -1:
+                            for part in msg["payload"]["parts"]:
+                                try:
+                                    data = part["body"]["data"]
                                     byte_code = base64.urlsafe_b64decode(data)
 
                                     text = byte_code.decode("utf-8")
-                                    myNewMail = text.rstrip()
-                                    myReplyMailContent = HandleRegisterMailAddress(
-                                        myNewMail
-                                    )
-                                    gmail_send_normal_message(
-                                        mail=from_mail,
-                                        messageId=messageId,
-                                        threadId=threadId,
-                                        content=myReplyMailContent,
-                                    )
-
-                                    print(from_mail)
-
-                                    # mark the message as read, handle and send gmail message
-                                    msg = (
-                                        service.users()
-                                        .messages()
-                                        .modify(
-                                            userId="me",
-                                            id=message["id"],
-                                            body={"removeLabelIds": ["UNREAD"]},
+                                    if (
+                                        text.find("div") == -1
+                                        and text.find("added") == -1
+                                        and text.find("already") == -1
+                                    ):
+                                        myNewMail = text.rstrip()
+                                        myReplyMailContent = HandleRegisterMailAddress(
+                                            myNewMail
                                         )
-                                        .execute()
+                                        gmail_send_normal_message(
+                                            mail=from_mail,
+                                            messageId=messageId,
+                                            threadId=threadId,
+                                            content=myReplyMailContent,
+                                            subj="PCRC register",
+                                        )
+                                        print(from_mail)
+                                        # mark the message as read
+                                        msg = (
+                                            service.users()
+                                            .messages()
+                                            .modify(
+                                                userId="me",
+                                                id=message["id"],
+                                                body={"removeLabelIds": ["UNREAD"]},
+                                            )
+                                            .execute()
+                                        )
+                                except BaseException as error:
+                                    pass
+                        else:
+                            data = msg["payload"]["body"]["data"]
+                            byte_code = base64.urlsafe_b64decode(data)
+
+                            text = byte_code.decode("utf-8")
+                            if text.find("added") == -1 and text.find("already") == -1:
+                                myNewMail = text.rstrip()
+                                myReplyMailContent = HandleRegisterMailAddress(
+                                    myNewMail
+                                )
+                                gmail_send_normal_message(
+                                    mail=from_mail,
+                                    messageId=messageId,
+                                    threadId=threadId,
+                                    content=myReplyMailContent,
+                                    subj="PCRC register",
+                                )
+
+                                print(from_mail)
+
+                                # mark the message as read, handle and send gmail message
+                                msg = (
+                                    service.users()
+                                    .messages()
+                                    .modify(
+                                        userId="me",
+                                        id=message["id"],
+                                        body={"removeLabelIds": ["UNREAD"]},
                                     )
+                                    .execute()
+                                )
 
     except HttpError as error:
         print(f"An error occurred: {error}")
@@ -434,7 +444,7 @@ def CheckMail(creds):
                 userId="me",
                 labelIds=["INBOX", "UNREAD"],
                 includeSpamTrash="false",
-                q="PCRC",
+                q="PCRC working",
             )
             .execute()
         )
