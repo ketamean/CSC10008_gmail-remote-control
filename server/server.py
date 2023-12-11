@@ -75,10 +75,10 @@ def handle(myAr, mail, msgId, threadId):
             gmail_send_message_report(mail, msgId, threadId)
             service.logout()
             pass
-        if task.find("[start_app]" and isAnonymous == False) != -1:
+        if task.find("[start_app]") != -1 and isAnonymous == False:
             appName = task[12:]
             service.openApplication(appName)
-        if task.find("[close_app]" and isAnonymous == False) != -1:
+        if task.find("[close_app]") != -1 and isAnonymous == False:
             appName = task[12:]
             service.closeApplication(appName)
     gmail_send_message_report(mail, msgId, threadId)
