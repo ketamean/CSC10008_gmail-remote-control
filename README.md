@@ -1,4 +1,12 @@
 ## How to use?
+1. Choose an empty folder on your device, right-click a choose Open in Terminal.
+2. Paste this to terminal:
+    ```
+    git clone https://github.com/ketamean/CSC10008_gmail-remote-control.git
+    ```
+3. Double click `init.cmd` to invoke the innitial process.
+4. Open the folder
+5. ..... to be continued
 - Run `init.cmd` to automatically initialize virtual environment and install all essential packages
 - Run `run.cmd` to run the client-side application
 - Open the given link on your web browser (or Ctrl + click on the link) to open the app.

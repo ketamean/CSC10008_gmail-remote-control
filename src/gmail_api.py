@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import base64
 import os.path
-import time
+import re
 
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -24,9 +24,13 @@ from googleapiclient.http import MediaIoBaseDownload
 ################################################################
 SCOPES = ['https://mail.google.com/']
 
-def authenticate(tokenFile):
+EMAIL_PATTERN = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+
+def authenticate(tokenFile = '', mkTokenFile = True):
     """
         let user authenticate and authorize this app with Google
+        
+        mkTokenFile: write the Creds to a token.json file
 
         returns `Creds`
     """
@@ -38,16 +42,14 @@ def authenticate(tokenFile):
     if not Creds or not Creds.valid:
         if Creds and Creds.expired and Creds.refresh_token:
             Creds.refresh(Request())
-        elif not os.path.exists('config/credentials.json') :
-            print("Cannot find credentials file")
-            return None
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 'config/credentials.json', SCOPES)
             Creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open(tokenFile, 'w') as token:
-            token.write(Creds.to_json())
+        if mkTokenFile:
+            with open(tokenFile, 'w') as token:
+                token.write(Creds.to_json())
     return Creds
 
 def buildService(Creds):
@@ -188,8 +190,10 @@ def readMail_command(Creds, resultPath, threadId):
     return None, None
 
 def readMail_register(Creds, threadId):
+    """
+        returns True | None
+    """
     try:
-        Service = buildService(Creds)
         messages = getMessagesInThread(Creds=Creds, threadId=threadId)
         if not messages:
             # an empty thread
@@ -213,8 +217,11 @@ def readMail_register(Creds, threadId):
                     markMsgAsRead(Creds=Creds, msg_obj=message)
                     return True
                 else:
-                    markMsgAsRead(Creds=Creds, msg_obj=message)
-                    return False
+                    # the content is an email address
+                    # as the email address is unread, there is no result so do not need to check
+                    if bool(re.match(EMAIL_PATTERN, content)) == False:
+                        markMsgAsRead(Creds=Creds, msg_obj=message)
+                    return None
             else:
                 # multipart mail
                 for part in parts:
@@ -225,10 +232,12 @@ def readMail_register(Creds, threadId):
                             markMsgAsRead(Creds=Creds, msg_obj=message)
                             return True
                         else:
-                            markMsgAsRead(Creds=Creds, msg_obj=message)
-                            return False
+                            # the content is an email address
+                            # as the email address is unread, there is no result so do not need to check
+                            if bool(re.match(EMAIL_PATTERN, content)) == False:
+                                markMsgAsRead(Creds=Creds, msg_obj=message)
+                            return None
             markMsgAsRead(Creds=Creds, msg_obj=message)
-        return None
     except HttpError as error:
         print(f'An error occurred: {error}')
         return error

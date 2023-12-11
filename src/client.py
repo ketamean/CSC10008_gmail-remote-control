@@ -7,16 +7,21 @@ import threading
 
 app = Flask('G-Controller')
 
-# SERVER_GMAIL_ADDRESS = 'truongthanhtoan2003@gmail.com'
+def initEnvironment():
+    helper.Info.ServerCreds = gmail_api.authenticate('token_anonymous')
+    helper.Info.ServerProfile, _ = gmail_api.checkAuthenticated( helper.Info.ServerCreds )
+initEnvironment()
+
 SERVER_GMAIL_ADDRESS = 'chiemthoica@gmail.com'
+
 class SubjectMail:
-    COMMAND = 'PCRC'
+    COMMAND = 'PCRC working'
     REGISTER = 'PCRC register'
     LOGIN = 'PCRC authentication'
 
 def initAccount(tokenFile):
     try:
-        helper.Info.Creds = gmail_api.authenticate(tokenFile)
+        helper.Info.Creds = gmail_api.authenticate(tokenFile=tokenFile)
     except gmail_api.HttpError:
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
@@ -30,7 +35,9 @@ def initAccount(tokenFile):
 def register():
     helper.Flag.Register = False
     try:
-        creds = gmail_api.authenticate('token')
+        if os.path.exists('config/token.json'):
+            os.remove('config/token.json')
+        creds = gmail_api.authenticate(tokenFile='token')
     except gmail_api.HttpError:
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
@@ -41,17 +48,19 @@ def register():
     gmail_address = profile.get('emailAddress')
     msg_obj, err = gmail_api.sendMail(
         receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject=SubjectMail.REGISTER,
-        msg_content=gmail_address, Creds=creds
+        msg_content=gmail_address, Creds=helper.Info.ServerCreds
     )
     if err:
+        print('Regiter | send err: ', err)
         return redirect( url_for('login') )
-    res = ModuleNotFoundError
+    res = None
     while True:
         res = gmail_api.readMail_register(
-        Creds=helper.Info.Creds, threadId=gmail_api.getThreadId(msg_obj)
-    )
-        if res != None:
+            Creds=helper.Info.ServerCreds, threadId=gmail_api.getThreadId(msg_obj)
+        )
+        if res == True:
             break
+        time.sleep(3)
     if res == True:
         helper.Info.Creds = creds
         helper.Info.Profile = profile
@@ -61,9 +70,8 @@ def register():
         helper.Flag.LoggedIn = True
         helper.Info.HTMLFileName = helper.FULL_HTML_FILENAME
         return redirect( url_for(control) )
-    elif res == False:
-        helper.Flag.Register = False
     else:
+        helper.Flag.Register = False
         print("Register error: ", res)
     return redirect( url_for('login') )
 
@@ -106,9 +114,14 @@ def login():
 def control_anonymous():
     helper.Flag.Anonymous = True
     if not os.path.exists('config/token_anonymous.json'):
+        helper.Info.ServerProfile = helper.Info.ServerCreds = None
+        print('cannot find /config/token_anonymous.json')
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
-    initAccount('token_anonymous')
+    
+    helper.Info.Profile = helper.Info.ServerProfile
+    helper.Info.Creds = helper.Info.ServerCreds
+
     helper.Flag.LoggedIn = True
     helper.Info.HTMLFileName = helper.ANONYMOUS_HTML_FILENAME
     return redirect( url_for('control') )
@@ -120,7 +133,7 @@ def control_with_gmail():
     initAccount('token')
     # msg_obj, err = gmail_api.sendMail(
     #     receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject='PCRC authentication',
-    #     msg_content=helper.Info.GmailAddress, Creds=helper.Info.Creds
+    #     msg_content=helper.Info.GmailAddress, Creds=helper.Info.ServerCreds
     # )
     # if err:
     #     print('Cannot authenticate account.')
@@ -128,12 +141,13 @@ def control_with_gmail():
     # auth = None
     # while True:
     #     auth = gmail_api.readMail_authentication(
-    #         Creds=helper.Info.Creds, threadId=gmail_api.getThreadId(msg_obj=msg_obj)
+    #         Creds=helper.Info.ServerCreds, threadId=gmail_api.getThreadId(msg_obj=msg_obj)
     #     )
     #     if auth != None:
     #         break
+    #     time.sleep(3)
     # print(auth)
-    auth = True             # temp
+    auth = True             # delete this line if you want to run the above block of code
     if not auth:
         helper.Flag.AuthenState = 'failed'
         helper.Flag.Anonymous = False

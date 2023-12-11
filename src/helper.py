@@ -13,6 +13,8 @@ class Info:
     SentMsgObject = None            # Message object, including: 'id', 'threadId' and 'labelIds'
     Timer = 0                       # [int] maximum ammount of time to wait the replied mail after sending request
     HTMLFileName = None             # [str] name of the html file to be rendered
+    ServerCreds = None              # creds of server gmail account
+    ServerProfile = None            # profile object of server gmail account
 
 class Flag:
     # process flag
