@@ -122,7 +122,7 @@ def closeApplication(process_name):
             file.write(process_name + " closed" + "\n")
     except Exception as er:
         with open(outputDir, "w") as file:
-            file.write(process_name + "is not opened" + "\n")
+            file.write(process_name + " is not opened" + "\n")
 
 
 def openApplication(appName):
