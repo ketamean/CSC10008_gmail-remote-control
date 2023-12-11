@@ -183,7 +183,7 @@ def gmail_send_message_report(mail, messageId, threadId):
     return send_message
 
 
-def HandleMailAddress(myNewMail):
+def HandleRegisterMailAddress(myNewMail):
     isAppear = False
     for oldMail in globalMailList:
         if myNewMail == oldMail:
@@ -194,6 +194,125 @@ def HandleMailAddress(myNewMail):
     else:
         globalMailList.append(myNewMail)
         return "added"
+
+
+def HandleLoginMailAddress(myMail):
+    isAppear = False
+    for oldMail in globalMailList:
+        if myMail == oldMail:
+            isAppear = True
+            break
+    if isAppear:
+        return "YES"
+    else:
+        return "NO"
+
+
+def CheckLoginMail(creds):
+    try:
+        service = build("gmail", "v1", credentials=creds)
+        result = (
+            service.users()
+            .messages()
+            .list(
+                userId="me",
+                labelIds=["INBOX", "UNREAD"],
+                includeSpamTrash="false",
+                q="PCRC authentication",
+            )
+            .excute()
+        )
+        messages = result.get("messages", [])
+        if messages:
+            for message in messages:
+                msg = (
+                    service.users()
+                    .messages()
+                    .get(userId="me", id=message["id"])
+                    .excute()
+                )
+                threadId = msg["threadId"]
+                email_data = msg["payload"]["headers"]
+                messageId = ""
+                for values in email_data:
+                    name = values["name"]
+                    if name == "Message-ID":
+                        messageId = values["value"]
+                        for values in email_data:
+                            name = values["name"]
+                            if name == "From":
+                                if values["value"].find("<") == -1:
+                                    from_mail = values["value"]
+                                else:
+                                    # using RegEx
+                                    from_data = re.findall(r"<(.*?)>", values["value"])
+                                    from_mail = from_data[0]
+                                if msg["payload"].get("parts", -1) != -1:
+                                    for part in msg["payload"]["parts"]:
+                                        try:
+                                            data = part["body"]["data"]
+                                            byte_code = base64.urlsafe_b64decode(data)
+
+                                            text = byte_code.decode("utf-8")
+                                            if text.find("div") == -1:
+                                                myMail = text.rstrip()
+                                                myReplyMailContent = (
+                                                    HandleLoginMailAddress(myMail)
+                                                )
+                                                gmail_send_normal_message(
+                                                    mail=from_mail,
+                                                    messageId=messageId,
+                                                    threadId=threadId,
+                                                    content=myReplyMailContent,
+                                                )
+
+                                                print(from_mail)
+
+                                                # mark the message as read
+                                                msg = (
+                                                    service.users()
+                                                    .messages()
+                                                    .modify(
+                                                        userId="me",
+                                                        id=message["id"],
+                                                        body={
+                                                            "removeLabelIds": ["UNREAD"]
+                                                        },
+                                                    )
+                                                    .execute()
+                                                )
+                                        except BaseException as error:
+                                            pass
+                                else:
+                                    data = msg["payload"]["body"]["data"]
+                                    byte_code = base64.urlsafe_b64decode(data)
+
+                                    text = byte_code.decode("utf-8")
+                                    myMail = text.rstrip()
+                                    myReplyMailContent = HandleLoginMailAddress(myMail)
+                                    gmail_send_normal_message(
+                                        mail=from_mail,
+                                        messageId=messageId,
+                                        threadId=threadId,
+                                        content=myReplyMailContent,
+                                    )
+
+                                    print(from_mail)
+
+                                    # mark the message as read, handle and send gmail message
+                                    msg = (
+                                        service.users()
+                                        .messages()
+                                        .modify(
+                                            userId="me",
+                                            id=message["id"],
+                                            body={"removeLabelIds": ["UNREAD"]},
+                                        )
+                                        .execute()
+                                    )
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
 
 
 def CheckRegisterMail(creds):
@@ -243,9 +362,9 @@ def CheckRegisterMail(creds):
 
                                             text = byte_code.decode("utf-8")
                                             if text.find("div") == -1:
-                                                myNewMail = text
-                                                myReplyMailContent = HandleMailAddress(
-                                                    myNewMail
+                                                myNewMail = text.rstrip()
+                                                myReplyMailContent = (
+                                                    HandleRegisterMailAddress(myNewMail)
                                                 )
                                                 gmail_send_normal_message(
                                                     mail=from_mail,
@@ -276,8 +395,10 @@ def CheckRegisterMail(creds):
                                     byte_code = base64.urlsafe_b64decode(data)
 
                                     text = byte_code.decode("utf-8")
-                                    myNewMail = text
-                                    myReplyMailContent = HandleMailAddress(myNewMail)
+                                    myNewMail = text.rstrip()
+                                    myReplyMailContent = HandleRegisterMailAddress(
+                                        myNewMail
+                                    )
                                     gmail_send_normal_message(
                                         mail=from_mail,
                                         messageId=messageId,
