@@ -58,14 +58,15 @@ def buildService(Creds):
     """
     return build('gmail', 'v1', credentials=Creds)
 
-def checkAuthenticated(Creds):
+def checkAuthenticated(Creds, Service):
     """
         double check if user has authenticated and authorized
 
         returns profile_obj, True || error, False
     """
     try:
-        Service = buildService(Creds)
+        if not Service:
+            Service = buildService(Creds)
         profile = Service.users().getProfile(userId='me').execute()
         return profile, True
     except HttpError as error:
@@ -80,7 +81,7 @@ def constructMail(receiver, sender, subject, msg_content):
     message.attach(body)
     return message
 
-def sendMail(receiver, sender, subject, msg_content, Creds, threadId = None):
+def sendMail(receiver, sender, subject, msg_content, Creds, Service, threadId = None):
     """
         if there is msgId and threadId, the mail to be sent is a reply mail
         returns ([obj]msg obj, [str]error)
@@ -88,7 +89,8 @@ def sendMail(receiver, sender, subject, msg_content, Creds, threadId = None):
     try:
         if not Creds:
             return None, "Creads do not exist: login again."
-        Service = buildService(Creds)
+        if not Service:
+            Service = buildService(Creds)
         message = constructMail(
             receiver=receiver, sender=sender, subject=subject, msg_content=msg_content
         )
@@ -107,135 +109,17 @@ def sendMail(receiver, sender, subject, msg_content, Creds, threadId = None):
         return None, err
     return send_message, None
 
-def getMessagesInThread(Creds, threadId):
+def getMessagesInThread(Creds, Service, threadId):
     try:
-        threadData = getThreadData(Creds=Creds, threadId=threadId)
+        threadData = getThreadData(Creds=Creds, Service=Service, threadId=threadId)
         messages = threadData.get('messages', [])
         return messages
     except Exception as error:
         print(f'An error occurred: {error}')
 
-def readMail_command(Creds, resultPath, threadId):
-    """
-        read the reply mail that contains results of the sent request.
-
-        [bool], [bool] | [error]
-            True: if got and downloaded; otherwise, False
-            
-            None | [error]: False if there is no error
-    """
-    try:
-        Service = buildService(Creds)
-        messages = getMessagesInThread(Creds=Creds, threadId=threadId)
-        if not messages:
-            # an empty thread
-            return False
-        flag = 0
-        for message in messages:
-            lbls = message.get('labelIds', [])
-            for lbl in lbls:
-                if lbl == 'UNREAD':
-                    flag = flag + 1
-                    break
-            if flag == 0: # there is no UNREAD msg
-                continue  # skip to the next msg
-            # now, this is an UNREAD mail
-            # check the subject
-            parts = message['payload'].get('parts', [])
-            if not parts:
-                # plain text mail => has no attachments or cannot obtain attachments
-                return False
-            flag = 0
-            for part in parts:
-                if part['filename'] == '':
-                    data = part['body'].get('data')
-                    if data:
-                        text = base64.urlsafe_b64decode(data).decode("utf-8")
-                        myAr = text.splitlines()
-                        if myAr[0] != 'This is the result':
-                            continue
-                        else:
-                            flag = flag + 1
-                            break
-                    else:
-                        # there is a part without filename but has no `data` key => incorrect behavior
-                        return False
-            if flag == 0:
-                # there is no text in the msg => invalid mail
-                return False
-            for part in parts:
-                att_id = part['body'].get('attachmentId')
-                if not att_id:
-                    continue
-                att = Service.users().messages().attachments().get(userId='me', messageId=message['id'],id=att_id).execute()
-                file_data = base64.urlsafe_b64decode(att['data'].encode('UTF-8'))
-                #path = resultPath + part['filename']
-                with open(os.path.join(resultPath, part['filename']), 'wb') as f:
-                    f.write(file_data)
-            # mark the message as read
-            markMsgAsRead(Creds=Creds, msg_obj=message)
-            return True
-    except HttpError as error:
-        print(f'An error occurred: {error}')
-        return str(error)
-    return None
-
-def readMail_register(Creds, threadId):
-    """
-        returns True | None
-    """
-    try:
-        messages = getMessagesInThread(Creds=Creds, threadId=threadId)
-        if not messages:
-            # an empty thread
-            return None
-        flag = 0
-        for message in messages:
-            lbls = message.get('labelIds', [])
-            for lbl in lbls:
-                if lbl == 'UNREAD':
-                    flag = flag + 1
-                    break
-            if flag == 0: # there is no UNREAD msg
-                continue  # skip to the next msg
-            # now, this is an UNREAD mail and flag == 1
-            # check the subject
-            parts = message['payload'].get('parts', [])
-            if not parts:
-                # plain text mail
-                content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode("utf-8")
-                if content == 'added' or content == 'already existed':
-                    markMsgAsRead(Creds=Creds, msg_obj=message)
-                    return True
-                else:
-                    # the content is an email address
-                    # as the email address is unread, there is no result so do not need to check
-                    if bool(re.match(EMAIL_PATTERN, content)) == False:
-                        markMsgAsRead(Creds=Creds, msg_obj=message)
-                    return None
-            else:
-                # multipart mail
-                for part in parts:
-                    data = part['body'].get('data')
-                    if data:
-                        content = base64.urlsafe_b64decode(data).decode("utf-8")
-                        if content == 'added' or content == 'already existed':
-                            markMsgAsRead(Creds=Creds, msg_obj=message)
-                            return True
-                        else:
-                            # the content is an email address
-                            # as the email address is unread, there is no result so do not need to check
-                            if bool(re.match(EMAIL_PATTERN, content)) == False:
-                                markMsgAsRead(Creds=Creds, msg_obj=message)
-                            return None
-            markMsgAsRead(Creds=Creds, msg_obj=message)
-    except HttpError as error:
-        print(f'An error occurred: {error}')
-        return error
-    return None # regularize function's behaviour 
-
-def markMsgAsRead(Creds, msg_obj):
-    Service = buildService(Creds=Creds)
+def markMsgAsRead(Creds, Service, msg_obj):
+    if not Service:
+        Service = buildService(Creds=Creds)
     tmp = (
         Service.users()
         .messages()
@@ -247,63 +131,119 @@ def markMsgAsRead(Creds, msg_obj):
         .execute()
     )
 
-def readMail_authentication(Creds, threadId):
+def extractQuery(query):
     """
-        fyi: authentication is a processed that is invoked when "loging in with user's gmail account" to ensure that account has already been registered.
+        query = "query_true|query_false"
 
-        read the replied mail from server in authentication
+        returns query_true, query_false
+    """
+    res = query.split('|')
+    if len(res) == 2:
+        return res
+    elif len(res) == 1:
+        return res[0], None
+    return None, None
 
-        returns None | True | False | [str]error
+def notMatchQuery_readMailRegister(Creds, Service, msg_obj, content):
+    if not Service:
+        Service = buildService(Creds=Creds)
+    if bool(re.match(EMAIL_PATTERN, content)) == False:
+        markMsgAsRead(Creds=Creds, Service=Service, msg_obj=msg_obj)
+    return None
+
+def checkQuery(Creds, Service, msg_obj, content, query, task_if_not_match_query):
+    """
+        return True | False | None | [str]'continue'
+    """
+    q_true, q_false = extractQuery(query=query)
+    if not q_false:
+        myAr = content.splitlines()
+        if myAr[0] != q_true:
+            return 'continue'
+        else:
+            return 'download'
+    else:
+        if content == q_true:
+            markMsgAsRead(Creds=Creds, Service=Service, msg_obj=msg_obj)
+            return True
+        elif content == q_false:
+            markMsgAsRead(Creds=Creds, Service=Service, msg_obj=msg_obj)
+            return False
+        elif task_if_not_match_query:
+            return task_if_not_match_query(Creds, Service, msg_obj, content)
+        return 'continue'
+
+def downloadAttachments(Creds, Service, msg_obj, resultPath):
+    parts = msg_obj['payload'].get('parts')
+    if not Service:
+        Service = buildService(Creds)
+    for part in parts:
+        att_id = part['body'].get('attachmentId')
+        if not att_id:
+            continue
+        att = Service.users().messages().attachments().get(userId='me', messageId=msg_obj['id'],id=att_id).execute()
+        file_data = base64.urlsafe_b64decode(att['data'].encode('UTF-8'))
+        #path = resultPath + part['filename']
+        with open(os.path.join(resultPath, part['filename']), 'wb') as f:
+            f.write(file_data)
+    markMsgAsRead(Creds=Creds, Service=Service, msg_obj=msg_obj)
+
+def readMail(Creds, Service, threadId, query = '', task_if_not_match_query = None, work_w_plain_text_mail = True, resultPath = None):
+    """
+        query: [str], format "query_true|query_false"
+
+        task_if_not_match_query: a function to do if mail content does not match
     """
     try:
-        Service = buildService(Creds)
-        messages = getMessagesInThread(Creds=Creds, threadId=threadId)
+        if not Service:
+            Service = buildService(Creds)
+        messages = getMessagesInThread(Creds=Creds, Service=Service, threadId=threadId)
         if not messages:
             # an empty thread
-            return None
-        
+            return False
+        flag = False
         for message in messages:
-            flag = 0
             lbls = message.get('labelIds', [])
             for lbl in lbls:
                 if lbl == 'UNREAD':
-                    flag = flag + 1
+                    flag = True
                     break
-            if flag == 0: # there is no UNREAD msg
+            if flag == False: # there is NO UNREAD msg
                 continue  # skip to the next msg
-            # now, this is an UNREAD mail and flag == 1
-            # check the subject
+            # now, this is an UNREAD mail, and flag == True
             parts = message['payload'].get('parts', [])
-            if not parts:
-                # plain text mail
-                content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode("utf-8")
-                if content == 'YES':
-                    markMsgAsRead(Creds=Creds, msg_obj=message)
-                    return True
-                elif content == 'NO':
-                    markMsgAsRead(Creds=Creds, msg_obj=message)
-                    return False
+            if not parts: # plain text mail
+                if work_w_plain_text_mail:
+                    content = base64.urlsafe_b64decode(message['payload']['body']['data']).decode("utf-8")
+                    # print('content read mail: ', content)
+                    chk = checkQuery(Creds, Service, message, content, query, task_if_not_match_query)
+                    if chk == 'continue':
+                        continue
+                    else:
+                        return chk
                 else:
-                    continue
-            else:
-                # multipart mail
+                    return False
+            else: # multipart mail
                 for part in parts:
                     data = part['body'].get('data')
                     if data:
                         content = base64.urlsafe_b64decode(data).decode("utf-8")
-                        if content == 'YES':
-                            markMsgAsRead(Creds=Creds, msg_obj=message)
-                            return True
-                        elif content == 'NO':
-                            markMsgAsRead(Creds=Creds, msg_obj=message)
-                            return False
-                        else:
-                            continue
+                        # print('content read mail: ', content)
+                        chk = checkQuery(Creds, Service, message, content, query, task_if_not_match_query)
+                    if chk == 'continue':
+                        continue
+                    elif chk == 'download':
+                        flag = 'download'
+                        break
+                    else:
+                        return chk
+            if flag == 'download':
+                downloadAttachments(Creds, Service, message, resultPath)
+                return True
     except HttpError as error:
         print(f'An error occurred: {error}')
-        return error
+        return str(error)
     return None # regularize function's behaviour 
-
 
 def getThreadId(msg_obj):
     try:
@@ -311,9 +251,10 @@ def getThreadId(msg_obj):
     except:
         return None
 
-def getThreadData(Creds, threadId):
+def getThreadData(Creds, Service, threadId):
     try:
-        Service = buildService(Creds)
+        if not Service:
+            Service = buildService(Creds)
         return Service.users().threads().get(userId='me', id=threadId).execute()
     except:
         return None

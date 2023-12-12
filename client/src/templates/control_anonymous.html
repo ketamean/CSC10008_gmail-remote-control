@@ -24,6 +24,10 @@
             rel="stylesheet"
             href="../static/control.css"
         >
+        <link
+            rel="stylesheet"
+            href="../static/modal.css"
+        >
 
         <!-- icon -->
         <link
@@ -156,7 +160,6 @@
         <script>
             function submitForm() {
                 document.getElementById('modal__overlay__aftersend').style.display = 'flex';
-                window.location.href = "{{  url_for('send_mail_handler')  }}";
                 return 1;
             }
             

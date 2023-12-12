@@ -1,7 +1,6 @@
 import os
 import re
 import winreg
-import gmail_api
 
 ANONYMOUS_HTML_FILENAME = 'control_anonymous.html'
 FULL_HTML_FILENAME = 'control_full.html'
@@ -10,16 +9,16 @@ class Info:
     GmailAddress = None             # client's Gmail address
     Profile =  None                 # is reserved for future use
     Creds = None
+    Service = None                  # mail service
     SentMsgObject = None            # Message object, including: 'id', 'threadId' and 'labelIds'
-    Timer = 0                       # [int] maximum ammount of time to wait the replied mail after sending request
     HTMLFileName = None             # [str] name of the html file to be rendered
     ServerCreds = None              # creds of server gmail account
     ServerProfile = None            # profile object of server gmail account
+    ServerService = None            # mail service of server's gmail account
 
 class Flag:
     # process flag
     SendMsgError = None             # error caused by sending messages; is None if there is no error
-    TimeOutRespond = False          # mark whether the process of getting respond after sending request is time-out
     SuccessRequest = False          # mark whether the process of receiving response after sending request is done (all the files are downloaded)
 
     # login flag
@@ -56,16 +55,15 @@ def resetUserInfo(del_token):
         reset user info after re-login
         [None]
     """
-    Info.Timer = 0
     Info.GmailAddress = None
     Info.Profile = None
     if del_token and os.path.exists('config/token.json'):
         os.remove('config/token.json')
     Info.Creds = None
+    Info.Service = None
     Info.SendMsgObject = None
     Flag.LoggedIn = None
     Flag.SendMsgError = None
-    Flag.TimeOutRespond = False
 
 def getDownloadDir():
     """

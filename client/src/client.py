@@ -1,15 +1,15 @@
 from flask import Flask, render_template, url_for, request, redirect
 import gmail_api
-import os # operating system
+import os
 import helper
 import time
-import threading
 
 app = Flask('G-Controller')
 
 def initEnvironment():
     helper.Info.ServerCreds = gmail_api.authenticate('token_anonymous')
-    helper.Info.ServerProfile, _ = gmail_api.checkAuthenticated( helper.Info.ServerCreds )
+    helper.Info.ServerService = gmail_api.buildService(helper.Info.ServerCreds)
+    helper.Info.ServerProfile, _ = gmail_api.checkAuthenticated( helper.Info.ServerCreds, helper.Info.ServerService )
 initEnvironment()
 
 SERVER_GMAIL_ADDRESS = 'chiemthoica@gmail.com'
@@ -22,10 +22,11 @@ class SubjectMail:
 def initAccount(tokenFile):
     try:
         helper.Info.Creds = gmail_api.authenticate(tokenFile=tokenFile)
+        helper.Info.Service = gmail_api.buildService(helper.Info.Creds)
     except gmail_api.HttpError:
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
-    helper.Info.Profile, auth = gmail_api.checkAuthenticated( helper.Info.Creds )
+    helper.Info.Profile, auth = gmail_api.checkAuthenticated( helper.Info.Creds, helper.Info.Service )
     if auth == False:
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
@@ -39,31 +40,35 @@ def register():
         if os.path.exists('config/token.json'):
             os.remove('config/token.json')
         creds = gmail_api.authenticate(tokenFile='token')
+        service = gmail_api.buildService(creds)
     except gmail_api.HttpError:
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
-    profile, auth = gmail_api.checkAuthenticated( creds )
+    profile, auth = gmail_api.checkAuthenticated( creds, service )
     if auth == False:
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
     gmail_address = profile.get('emailAddress')
     msg_obj, err = gmail_api.sendMail(
         receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject=SubjectMail.REGISTER,
-        msg_content=gmail_address, Creds=helper.Info.ServerCreds
+        msg_content=gmail_address, Creds=helper.Info.ServerCreds, Service=helper.Info.ServerService
     )
+    print('register: sent')
     if err:
         print('Regiter | send err: ', err)
         return redirect( url_for('login') )
-    res = None
+    reg = None
     while True:
-        res = gmail_api.readMail_register(
-            Creds=helper.Info.ServerCreds, threadId=gmail_api.getThreadId(msg_obj)
+        reg = gmail_api.readMail(
+            Creds=helper.Info.ServerCreds, Service=helper.Info.ServerService, threadId=gmail_api.getThreadId(msg_obj=msg_obj),
+            query="added|already existed",  task_if_not_match_query=gmail_api.notMatchQuery_readMailRegister
         )
-        if res == True:
+        if reg != None:
             break
-        time.sleep(3)
-    if res == True:
+        time.sleep(2)
+    if reg == True or reg == False:
         helper.Info.Creds = creds
+        helper.Info.Service = service
         helper.Info.Profile = profile
         helper.Info.GmailAddress = gmail_address
         helper.Flag.Register = True
@@ -73,7 +78,7 @@ def register():
         return redirect( url_for('control') )
     else:
         helper.Flag.Register = False
-        print("Register error: ", res)
+        print("Register error: ", reg)
     return redirect( url_for('login') )
 
 @app.route("/rememberUser_YES", methods=['GET', 'POST'])
@@ -126,6 +131,7 @@ def control_anonymous():
     
     helper.Info.Profile = helper.Info.ServerProfile
     helper.Info.Creds = helper.Info.ServerCreds
+    helper.Info.Service = helper.Info.ServerService
     helper.Info.GmailAddress = helper.Info.Profile.get('emailAddress')
 
     helper.Flag.LoggedIn = True
@@ -139,25 +145,28 @@ def control_with_gmail():
     initAccount('token')
     msg_obj, err = gmail_api.sendMail(
         receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject='PCRC authentication',
-        msg_content=helper.Info.GmailAddress, Creds=helper.Info.ServerCreds
+        msg_content=helper.Info.GmailAddress, Creds=helper.Info.ServerCreds, Service=helper.Info.ServerService
     )
+    print('control_with_gmail: sent')
     if err:
         print('control_with_gmail: cannot authenticate account.')
         return redirect( url_for('login') )
     auth = None
     while True:
-        auth = gmail_api.readMail_authentication(
-            Creds=helper.Info.ServerCreds, threadId=gmail_api.getThreadId(msg_obj=msg_obj)
+        auth = gmail_api.readMail(
+            Creds=helper.Info.ServerCreds, Service=helper.Info.ServerService, threadId=gmail_api.getThreadId(msg_obj=msg_obj),
+            query="YES|NO",
         )
         if auth != None:
             break
-        time.sleep(3)
-    # auth = True # delete this line if you want to run the above block of code
+        time.sleep(2)
+    print('control_with_gmail: auth = ', auth)
     if not auth:
         helper.Flag.AuthenState = 'failed'
         helper.Flag.Anonymous = False
         return redirect( url_for('login') )
     elif auth == False:
+        helper.Flag.AuthenState = None
         helper.Flag.LoginAuthentication = False
         return redirect( url_for('login') )
     elif auth == True:
@@ -176,12 +185,12 @@ def control():
             helper.Flag.SendMsgError = None
             return render_template(
                 helper.Info.HTMLFileName, send_error=True, client_email=helper.Info.GmailAddress,
-                isAuthor=True, isAnonymous=helper.Flag.Anonymous, timeouterror=helper.Flag.TimeOutRespond
+                isAuthor=True, isAnonymous=helper.Flag.Anonymous
             )
         else:
             return render_template(
                 helper.Info.HTMLFileName, client_email=helper.Info.GmailAddress, send_error=None, isAuthor=True,
-                isAnonymous=helper.Flag.Anonymous, timeouterror=helper.Flag.TimeOutRespond, successRequest=req_success
+                isAnonymous=helper.Flag.Anonymous, successRequest=req_success
             )
     except Exception as e:
         print('def control(): ', e)
@@ -192,10 +201,6 @@ def send_mail_handler():
     helper.Flag.SuccessRequest = False
     try:
         msg = request.form.get('msg-content')
-        if not msg:
-            print('send_mail_handler: cannot find message content')
-            helper.Flag.SendMsgError = True
-            return redirect( url_for('control') )
         if len(msg) == 0:
             helper.Flag.SendMsgError = None
             return redirect( url_for('control') )
@@ -205,11 +210,11 @@ def send_mail_handler():
         if chk_keylog == False:
             helper.Flag.SendMsgError = True
             return redirect( url_for('control') )
-        # helper.Info.Timer = helper.calcMaxWaitTime(msg)
         helper.Info.SentMsgObject, helper.Flag.SendMsgError = gmail_api.sendMail(
             receiver=SERVER_GMAIL_ADDRESS, sender=helper.Info.GmailAddress, subject=SubjectMail.COMMAND,
-            msg_content=msg, Creds=helper.Info.Creds
+            msg_content=msg, Creds=helper.Info.Creds, Service=helper.Info.Service
         )
+        print('send_mail_handler: sent')
         if helper.Flag.SendMsgError:
             print('send_mail_handler | Msg Error: ', helper.Flag.SendMsgError)
             return redirect( url_for('control') )
@@ -222,26 +227,24 @@ def send_mail_handler():
 def get_response():
     try:
         resultPath = helper.createResultDir()
-        # start_time = time.time()
         while True:
-            # if helper.duration(start_time=start_time, end_time=time.time()) >= helper.Info.Timer:
-            #     helper.Info.SentMsgObject = None
-            #     helper.Info.Timer = 0
-            #     helper.Flag.TimeOutRespond = True
-            #     return redirect( url_for('control') )
-            flag, err = gmail_api.readMail_command(
-                Creds=helper.Info.Creds, resultPath=resultPath,
-                threadId=gmail_api.getThreadId(helper.Info.SentMsgObject),
+            # flag, err = gmail_api.readMail_command(
+            #     Creds=helper.Info.Creds, resultPath=resultPath,
+            #     threadId=gmail_api.getThreadId(helper.Info.SentMsgObject),
+            # )
+            res = gmail_api.readMail(
+                Creds=helper.Info.Creds, Service=helper.Info.Service, threadId=gmail_api.getThreadId(helper.Info.SentMsgObject),
+                query='This is the result', work_w_plain_text_mail=False, resultPath=resultPath
             )
-            if flag == True:
+            # res == True | False | str(err)
+            if res == True:
                 break
-            if flag == False and err != False:
-                print('get_response | send mail err: ', err)
-                helper.makeTextFile(dir_path=resultPath, content=str(err), filename = "error")
+            if res and res != False: # so that res == str(err)
+                print('get_response | send mail err: ', res)
+                helper.makeTextFile(dir_path=resultPath, content=res, filename = "error")
                 break
             time.sleep(2)
         helper.Info.SentMsgObject = None
-        helper.Info.Timer = 0
         helper.Flag.SuccessRequest = True
         if helper.isEmptyDir(resultPath):
             os.rmdir(resultPath)

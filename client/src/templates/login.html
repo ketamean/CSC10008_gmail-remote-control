@@ -24,6 +24,10 @@
             rel="stylesheet"
             href="../static/login.css"
         >
+        <link
+            rel="stylesheet"
+            href="../static/modal.css"
+        >
 
         <!-- icon -->
         <link
@@ -92,7 +96,7 @@
                             style="font-weight: initial; font-style: italic; width: 65%;"
                             class="login-button round-border"
                             id="register"
-                            onclick="window.location.href = `{{ url_for('register') }}`"
+                            onclick="return submitRegister()"
                         >
                             Register
                         </button>
@@ -100,14 +104,16 @@
                 </div>    
             </div>
         </main>
+        <div class="modal__overlay" id="modal__overlay__loading">
+            <img
+                src="{{ url_for('static', filename='asset/loading.gif') }}"
+                id="loading-gif"
+            >
+        </div>
     </body>
 
+    <script src="{{ url_for('static', filename='script/login.js') }}"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Trigger the slide-in effect on page load
-            const slideInElement = document.getElementById("slide-in");
-            slideInElement.style.left = "0";
-        });
         {% block authen %}
             {% if successAuthen == False: %}
                 {% if isAnonymous == True: %}
@@ -130,9 +136,14 @@
             {% endif %}
         {% endblock %}
 
-
+        function submitRegister() {
+            document.getElementById('modal__overlay__loading').style.display = 'flex';
+            window.location.href = "{{ url_for('register') }}";
+            return 1;
+        }
 
         function login(type) {
+            document.getElementById('modal__overlay__loading').style.display = 'flex';
             if (type == 'anonymous') {
                 window.location.href = "{{ url_for('control_anonymous') }}"
             } else {
