@@ -28,7 +28,7 @@ class Flag:
     LoggedIn = None
     Register = False                # register result: True if success; otherwise, False
     RememberAccount = False         # mark if remember user account (do not delete token.json file)
-    LoginAuthentication =  False    # True if the account has been registered and allowed to log in; if not, False
+    LoginAuthentication = None      # True if the account has been registered and allowed to log in; if not, False
 
 def extractTimeKeylogger(msg: str):
     return re.findall(r'\n*\s*\[key_logger\]\s+(\d|\d\d)\s*\n+', msg)
@@ -146,4 +146,3 @@ def duration(start_time, end_time):
 #     if len(time_keylog) == 1:
 #         return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs) + int(time_keylog[0])
 #     return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs)
-    

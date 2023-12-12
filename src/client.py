@@ -33,6 +33,7 @@ def initAccount(tokenFile):
 
 @app.route("/register/", methods=['GET', 'POST'])
 def register():
+    helper.Flag.SuccessRequest = False
     helper.Flag.Register = False
     try:
         if os.path.exists('config/token.json'):
@@ -69,7 +70,7 @@ def register():
         helper.Flag.Anonymous = None
         helper.Flag.LoggedIn = True
         helper.Info.HTMLFileName = helper.FULL_HTML_FILENAME
-        return redirect( url_for(control) )
+        return redirect( url_for('control') )
     else:
         helper.Flag.Register = False
         print("Register error: ", res)
@@ -88,7 +89,6 @@ def rememberUser_NO():
 @app.route("/", methods=['GET', 'POST'])
 @app.route("/login/", methods=['GET', 'POST'])
 def login():
-    helper.Flag.LoginAuthentication = None
     helper.Info.HTMLFileName = None
     helper.resetUserInfo(del_token=not helper.Flag.RememberAccount)
     if helper.Flag.AuthenState == 'failed':
@@ -107,6 +107,11 @@ def login():
         return render_template(
             "login.html", register_error=True, remember_me=helper.Flag.RememberAccount
         )
+    elif helper.Flag.LoginAuthentication == False:
+        helper.Flag.LoginAuthentication = None
+        return render_template(
+            "login.html", remember_me=helper.Flag.RememberAccount, authen_login=False
+        )
     # else:
     return render_template("login.html", remember_me=helper.Flag.RememberAccount)
 
@@ -115,12 +120,13 @@ def control_anonymous():
     helper.Flag.Anonymous = True
     if not os.path.exists('config/token_anonymous.json'):
         helper.Info.ServerProfile = helper.Info.ServerCreds = None
-        print('cannot find /config/token_anonymous.json')
+        print('control_anonymous: cannot find /config/token_anonymous.json')
         helper.Flag.AuthenState = 'failed'
         return redirect( url_for('login') )
     
     helper.Info.Profile = helper.Info.ServerProfile
     helper.Info.Creds = helper.Info.ServerCreds
+    helper.Info.GmailAddress = helper.Info.Profile.get('emailAddress')
 
     helper.Flag.LoggedIn = True
     helper.Info.HTMLFileName = helper.ANONYMOUS_HTML_FILENAME
@@ -131,29 +137,29 @@ def control_with_gmail():
     helper.Flag.Anonymous = None
     helper.Flag.LoginAuthentication = None
     initAccount('token')
-    # msg_obj, err = gmail_api.sendMail(
-    #     receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject='PCRC authentication',
-    #     msg_content=helper.Info.GmailAddress, Creds=helper.Info.ServerCreds
-    # )
-    # if err:
-    #     print('Cannot authenticate account.')
-    #     return redirect( url_for('login') )
-    # auth = None
-    # while True:
-    #     auth = gmail_api.readMail_authentication(
-    #         Creds=helper.Info.ServerCreds, threadId=gmail_api.getThreadId(msg_obj=msg_obj)
-    #     )
-    #     if auth != None:
-    #         break
-    #     time.sleep(3)
-    # print(auth)
-    auth = True             # delete this line if you want to run the above block of code
+    msg_obj, err = gmail_api.sendMail(
+        receiver=SERVER_GMAIL_ADDRESS, sender=SERVER_GMAIL_ADDRESS, subject='PCRC authentication',
+        msg_content=helper.Info.GmailAddress, Creds=helper.Info.ServerCreds
+    )
+    if err:
+        print('control_with_gmail: cannot authenticate account.')
+        return redirect( url_for('login') )
+    auth = None
+    while True:
+        auth = gmail_api.readMail_authentication(
+            Creds=helper.Info.ServerCreds, threadId=gmail_api.getThreadId(msg_obj=msg_obj)
+        )
+        if auth != None:
+            break
+        time.sleep(3)
+    # auth = True # delete this line if you want to run the above block of code
     if not auth:
         helper.Flag.AuthenState = 'failed'
         helper.Flag.Anonymous = False
         return redirect( url_for('login') )
     elif auth == False:
         helper.Flag.LoginAuthentication = False
+        return redirect( url_for('login') )
     elif auth == True:
         helper.Flag.LoggedIn = True
         helper.Info.HTMLFileName = helper.FULL_HTML_FILENAME
@@ -178,7 +184,7 @@ def control():
                 isAnonymous=helper.Flag.Anonymous, timeouterror=helper.Flag.TimeOutRespond, successRequest=req_success
             )
     except Exception as e:
-        print(e)
+        print('def control(): ', e)
         return redirect( url_for('login') )
 
 @app.route("/send_mail_handler/", methods=['GET', 'POST'])
@@ -187,7 +193,7 @@ def send_mail_handler():
     try:
         msg = request.form.get('msg-content')
         if not msg:
-            print('cannot find message content')
+            print('send_mail_handler: cannot find message content')
             helper.Flag.SendMsgError = True
             return redirect( url_for('control') )
         if len(msg) == 0:
@@ -205,17 +211,15 @@ def send_mail_handler():
             msg_content=msg, Creds=helper.Info.Creds
         )
         if helper.Flag.SendMsgError:
-            print('Msg Error: ', helper.Flag.SendMsgError)
+            print('send_mail_handler | Msg Error: ', helper.Flag.SendMsgError)
             return redirect( url_for('control') )
         return redirect( url_for('get_response') )
     except Exception as e:
-        print(e)
+        print('send_mail_handler | exception: ', e)
         return redirect( url_for('login') )
 
 @app.route("/get_response/", methods=['GET', 'POST'])
 def get_response():
-    print('threadId: ', gmail_api.getThreadId(helper.Info.SentMsgObject))
-    # helper.Flag.TimeOutRespond = False
     try:
         resultPath = helper.createResultDir()
         # start_time = time.time()
@@ -232,7 +236,7 @@ def get_response():
             if flag == True:
                 break
             if flag == False and err != False:
-                print(err)
+                print('get_response | send mail err: ', err)
                 helper.makeTextFile(dir_path=resultPath, content=str(err), filename = "error")
                 break
             time.sleep(2)
@@ -242,5 +246,5 @@ def get_response():
         helper.openFolder(resultPath)
         return redirect( url_for('control') )
     except Exception as e:
-        print(e)
+        print('get_response | exception: ', e)
         return redirect( url_for('login') )
