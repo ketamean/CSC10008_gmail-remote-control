@@ -243,7 +243,10 @@ def get_response():
         helper.Info.SentMsgObject = None
         helper.Info.Timer = 0
         helper.Flag.SuccessRequest = True
-        helper.openFolder(resultPath)
+        if helper.isEmptyDir(resultPath):
+            os.remove(resultPath)
+        else:
+            helper.openFolder(resultPath)
         return redirect( url_for('control') )
     except Exception as e:
         print('get_response | exception: ', e)

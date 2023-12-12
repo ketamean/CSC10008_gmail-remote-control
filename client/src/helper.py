@@ -123,26 +123,12 @@ def makeTextFile(dir_path: str, content: str, filename: str):
 def duration(start_time, end_time):
     return end_time - start_time
 
-# def calcMaxWaitTime(msg_content: str):
-#     """
-#         [int] seconds
+def isEmptyDir(dir_path):
+    """
+        dir_path: abs path to the directory
 
-#         we cannot permanently wait for the response after sending request
-
-#         this function helps us to calc the maximum time to wait
-
-#         suppose that:
-            
-#             - it takes 15s to get the mail from mail server
-#             - it takes 1.5s each command, excluding keylogger (relatively)
-#             - it takes 0.8s to download result for each command
-
-#         prerequiste: this function is called if and only if there is a singular valid key-logger command in the msg content
-#     """
-#     # extract the number in key-logger command
-#     time_keylog = extractTimeKeylogger(msg=msg_content)
-#     msgs = [el for el in msg_content.splitlines() if el != '']
-    
-#     if len(time_keylog) == 1:
-#         return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs) + int(time_keylog[0])
-#     return 20 + 1.5 * (len(msgs) - 1) + 0.8 * len(msgs)
+        returns True: is an empty dir | False: is not empty
+    """
+    if len(os.listdir(dir_path)) == 0:
+        return True
+    return False

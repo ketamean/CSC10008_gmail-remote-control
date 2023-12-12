@@ -16,6 +16,10 @@
     }
 }
 
+#loading-gif {
+    border-radius: 50px;
+}
+
 #main-space {
     display: flex;
     flex-direction: column;
@@ -251,8 +255,6 @@
     position: fixed;
     display: none;
     z-index: 10;
-
-    border-radius: 40px;
 
     animation: fadeIn ease-in 0.2s;
 }
