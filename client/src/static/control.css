@@ -257,7 +257,7 @@
     z-index: 10;
 
     animation: fadeIn ease-in 0.2s;
-}
+}    
 
 .modal__inner {
     padding: 25px;
@@ -310,22 +310,7 @@
     color: #f1fef5;
 }
 
-/* #loading {
-    position: fixed;
-    display: block;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    text-align: center;
-    opacity: 0.7;
-    background-color: #fff;
-    z-index: 99;
+#loading-gif {
+    scale: 1;
+    border-radius: 100px;
 }
-
-#loading-image {
-    position: absolute;
-    top: 100px;
-    left: 240px;
-    z-index: 100;
-} */

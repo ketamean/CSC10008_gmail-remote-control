@@ -182,13 +182,10 @@
         </div>
 
         <div class="modal__overlay" id="modal__overlay__aftersend">
-            <iframe
-                src="https://giphy.com/embed/jAYUbVXgESSti"
-                width="480" height="270" frameBorder="0"
-                class="giphy-embed" allowFullScreen
+            <img
+                src="{{ url_for('static', filename='asset/loading.gif') }}"
                 id="loading-gif"
             >
-            </iframe>
         </div>
 
         <div class="modal__overlay" id="modal__overlay__logout">

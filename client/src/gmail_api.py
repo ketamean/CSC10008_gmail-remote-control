@@ -129,7 +129,7 @@ def readMail_command(Creds, resultPath, threadId):
         messages = getMessagesInThread(Creds=Creds, threadId=threadId)
         if not messages:
             # an empty thread
-            return False, False
+            return False
         flag = 0
         for message in messages:
             lbls = message.get('labelIds', [])
@@ -144,7 +144,7 @@ def readMail_command(Creds, resultPath, threadId):
             parts = message['payload'].get('parts', [])
             if not parts:
                 # plain text mail => has no attachments or cannot obtain attachments
-                return False, False
+                return False
             flag = 0
             for part in parts:
                 if part['filename'] == '':
@@ -159,10 +159,10 @@ def readMail_command(Creds, resultPath, threadId):
                             break
                     else:
                         # there is a part without filename but has no `data` key => incorrect behavior
-                        return False, False
+                        return False
             if flag == 0:
                 # there is no text in the msg => invalid mail
-                return False, False
+                return False
             for part in parts:
                 att_id = part['body'].get('attachmentId')
                 if not att_id:
@@ -173,21 +173,12 @@ def readMail_command(Creds, resultPath, threadId):
                 with open(os.path.join(resultPath, part['filename']), 'wb') as f:
                     f.write(file_data)
             # mark the message as read
-            tmp = (
-                Service.users()
-                .messages()
-                .modify(
-                    userId="me",
-                    id=message["id"],
-                    body={"removeLabelIds": ["UNREAD"]},
-                )
-                .execute()
-            )
-            return True, False
+            markMsgAsRead(Creds=Creds, msg_obj=message)
+            return True
     except HttpError as error:
         print(f'An error occurred: {error}')
-        return False, error
-    return None, None
+        return str(error)
+    return None
 
 def readMail_register(Creds, threadId):
     """

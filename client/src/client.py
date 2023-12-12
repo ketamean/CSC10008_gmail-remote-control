@@ -244,7 +244,7 @@ def get_response():
         helper.Info.Timer = 0
         helper.Flag.SuccessRequest = True
         if helper.isEmptyDir(resultPath):
-            os.remove(resultPath)
+            os.rmdir(resultPath)
         else:
             helper.openFolder(resultPath)
         return redirect( url_for('control') )
