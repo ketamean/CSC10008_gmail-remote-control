@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+        <title>G-Controller</title>
+
+        <!-- Bootstrap 5.0.2 -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"
+        >
+    
+        <!-- style CSS -->
+        <link
+            rel="stylesheet"
+            href="../static/general.css"
+        >
+        <link
+            rel="stylesheet"
+            href="../static/control.css"
+        >
+
+        <!-- icon -->
+        <link
+            rel="icon"
+            href="{{ url_for('static', filename='asset/icon.png') }}"
+            type="image/x-icon"
+        >
+    </head>
+    <body>
+        <script>
+            {% block authen %}
+                {% if isAuthor == False: %}
+                    alert('Please redirect to login page and choose 1 option.')
+                    redirectToLogin()
+                {% elif send_error: %}
+                    alert('Cannot send. Make sure that your mail does not violate the syntax or try loging in again.')
+                    redirectToLogin()
+                {% elif timeouterror: %}
+                    alert('Time out')
+                {% elif successRequest: %}
+                    alert('Done. All the result files are downloaded.')
+                {% endif %}
+            {% endblock %}
+        </script>
+        <main class="round-border" id="main-space">
+            <div
+                id="title-bar"
+            >
+                <div>
+                    <button
+                        type="button"
+                        id="back-button"
+                        style="border: none; background-color: transparent; display: flex; justify-content: center; padding: 0px;"
+                        onclick="redirectToLogin()"
+                    >
+                        <img
+                        src="{{ url_for('static', filename='asset/back-icon.png') }}"
+                        title="Go back to log-in page"
+                        alt="go-back-to-login"
+                        style="scale: 0.8;"
+                        />
+                    </button>
+                </div>
+        
+                <div>
+                    <strong>Remote Controller via Gmail</strong>
+                </div>
+        
+                <div>
+
+                </div>
+            </div> 
+        
+            <div
+                id="workspace"
+            >
+                <div
+                    id="command-container"
+                    class="round-border justify-content-center"
+                >
+                </div>
+        
+                <div
+                    id="mail-container"
+                    class="round-border"
+                    style="z-index: 1;"
+                >
+                    <div
+                        class="text-box"
+                        id="mail-from-box"
+                    >
+                        From: <span id="text-from">{{ client_email }}</span>
+                    </div>
+        
+                    <div id="mail-content-and-send-btn">
+                        <form id="form-mail" action="{{ url_for('send_mail_handler') }}" method="post" onsubmit="return submitForm()">
+                            <!--  -->
+                            <textarea
+                                class="text-box"
+                                id="mail-content-box"
+                                name="msg-content"
+                                placeholder="Your command here"
+                                spellcheck="false"
+                            ></textarea>
+                            <input type="submit" id="send-btn" value="Send">
+                        </form>
+                    </div>
+                </div>
+            </div>    
+        </main>
+
+        <div class="modal__overlay" id="modal__overlay__keylog">
+            <div class="modal__inner">
+                <div class="modal__body">
+                    <form>
+                        <div style="width: 100%; margin-bottom: 20px;">
+                            <label for="recipient-name" style="width: 100%;">How long do you want to get key log (in seconds, from 0 to 99)?</label>
+                        </div>
+                        <input type="number" name="time-keylog" id="textbox-keylog">
+                    </form>
+                </div>
+                <div class="modal__footer" style="justify-content: center;">
+                    <button
+                        type="button"
+                        class="modal-button"
+                        onclick="chooseCommand(0)"
+                    >
+                        Add
+                    </button>
+                    <button
+                        type="button"
+                        class="modal-button"
+                        onclick="closeKeyLoggerModal()"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal__overlay" id="modal__overlay__aftersend">
+            <iframe
+                src="https://giphy.com/embed/jAYUbVXgESSti"
+                width="480" height="270" frameBorder="0"
+                class="giphy-embed" allowFullScreen
+            >
+            </iframe>
+        </div>
+        
+        <script src="{{ url_for('static', filename='script/control_anonymous.js') }}"></script>
+        <script>
+            function submitForm() {
+                document.getElementById('modal__overlay__aftersend').style.display = 'flex';
+                window.location.href = "{{  url_for('send_mail_handler')  }}";
+                return 1;
+            }
+            
+            function redirectToLogin() {
+                // redirect to login page
+                window.location.href = "{{  url_for('login')  }}";
+            }
+
+            document.getElementById('modal__overlay__keylog').addEventListener('keydown', function(event) {
+                // Check if the pressed key is Enter (keyCode 13)
+                if (event.keyCode === 13) {
+                    // Prevent the default behavior of the Enter key
+                    event.preventDefault();
+                }
+            });
+
+            document.getElementById('send-btn').addEventListener('keydown', function(event) {
+                // Check if the pressed key is Enter (keyCode 13)
+                if (event.keyCode === 13) {
+                    // Prevent the default behavior of the Enter key
+                    event.preventDefault();
+                }
+            });
+        </script>
+    </body>
+</html>

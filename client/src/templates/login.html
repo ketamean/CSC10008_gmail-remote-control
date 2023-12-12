@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+        <title>G-Controller</title>
+
+        <!-- Bootstrap 5.0.2 -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"
+        >
+
+        <!-- style CSS -->
+        <link
+            rel="stylesheet"
+            href="../static/general.css"
+        >
+        <link
+            rel="stylesheet"
+            href="../static/login.css"
+        >
+
+        <!-- icon -->
+        <link
+            rel="icon"
+            href="{{ url_for('static', filename='asset/icon.png') }}"
+            type="image/x-icon"
+        >
+    </head>
+
+    <body>
+        <main class="round-border"
+            style="flex-direction: row; display: flex; justify-content: center; align-items: center;"
+        >
+            <div id="main-logo" style="padding: 10px; width: 53%;">
+                <a href="https://www.youtube.com/watch?v=QwLvrnlfdNo" target="_blank">
+                    <img style="border-radius: 500px; scale: 0.7;"
+                        src="{{ url_for('static', filename='asset/logo.jpg') }}"
+                        title="logo" alt="logo"
+                    >
+                </a>
+            </div>
+
+            <div style="display: flex; justify-content: center; align-items: center; width: 2%; height: 100%; padding: 10px;">
+                <div id="vertical-divider"></div>
+            </div>
+            <div style="width: 45%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                <div class="login-button-container round-border">
+                    <div style="height: 50%; width: 100%; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                        <div style=" display: flex; justify-content: center; align-items: center; width: 100%;">
+                            <button
+                                type="button"
+                                class="login-button round-border"
+                                id="login-anonymous"
+                                onclick="login('anonymous')"
+                            >
+                                Use without your email
+                            </button>
+                        </div>
+        
+                        <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+                            <form action="{{ url_for('control_with_gmail') }}" method="get" class="flex-column-center" style="width: 100%;">
+                                <button
+                                    type="button"
+                                    class="login-button round-border"
+                                    id="login-with-email"
+                                    onclick="login('')"
+                                >
+                                    Use your email
+                                </button>
+                                <div class="flex-row-center">
+                                    <input type="checkbox" name="remember_chkbox" id="remember_chkbox">
+    
+                                    <label for="remember_chkbox" style="color: rgb(9, 60, 60); font-size: small;"> Remember me</label><br>    
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="horizontal-divider">
+                        <!-- divider -->
+                    </div>
+    
+                    <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
+                        <button
+                            type="button"
+                            style="font-weight: initial; font-style: italic; width: 65%;"
+                            class="login-button round-border"
+                            id="register"
+                            onclick="window.location.href = `{{ url_for('register') }}`"
+                        >
+                            Register
+                        </button>
+                    </div>
+                </div>    
+            </div>
+        </main>
+    </body>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Trigger the slide-in effect on page load
+            const slideInElement = document.getElementById("slide-in");
+            slideInElement.style.left = "0";
+        });
+        {% block authen %}
+            {% if successAuthen == False: %}
+                {% if isAnonymous == True: %}
+                    alert('Cannot use anonymously. Please check for the existence of "src/config/token_anonymous.json"')
+                {% else: %}
+                    alert('Cannot log in. Please try again.')
+                {% endif %}
+            {% elif register_error == True: %}
+                alert('Register error! Please try again.')
+            {% elif authen_login == False: %}
+                alert('Your account has not been registered!')
+            {% endif %}
+        {% endblock %}
+
+        {% block remember %}
+            {% if remember_me == True: %}
+                document.getElementById('remember_chkbox').checked = true;
+            {% else: %}
+                document.getElementById('remember_chkbox').checked = false;
+            {% endif %}
+        {% endblock %}
+
+
+
+        function login(type) {
+            if (type == 'anonymous') {
+                window.location.href = "{{ url_for('control_anonymous') }}"
+            } else {
+                window.location.href = "{{ url_for('control_with_gmail') }}"
+            }
+        }
+    </script>
+</html>
