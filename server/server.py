@@ -462,6 +462,7 @@ def CheckMail(creds):
             .execute()
         )
         messages = results.get("messages", [])
+        print("I am checking mail")
         if not messages:
             print("No new messages.")
         else:
@@ -475,6 +476,7 @@ def CheckMail(creds):
                 threadId = msg["threadId"]
                 email_data = msg["payload"]["headers"]
                 messageId = ""
+                from_mail = ""
                 for values in email_data:
                     name = values["name"]
                     if name == "Message-ID":
@@ -489,7 +491,7 @@ def CheckMail(creds):
                             # using RegEx
                             from_data = re.findall(r"<(.*?)>", values["value"])
                             from_mail = from_data[0]
-                        if isValidMail(from_mail):
+                        if isValidMail(from_mail) == False:
                             continue
                         if msg["payload"].get("parts", -1) != -1:
                             for part in msg["payload"]["parts"]:
