@@ -95,27 +95,14 @@ def shutdown():
 
 def logout():
     os.system("shutdown -l")
-    
-def removeSpace(string):
-    return string.replace(" ", "")
-
-def getLastWord(name):
-    word = name.split()
-    return word[-1]
 
 def closeApplication(appName):
-    app_name = getLastWord(appName)
-    isKilled = False
-    for proc in psutil.process_iter(['pid', 'name']):
-        if app_name.lower() in proc.info['name'].lower():
-            process = psutil.Process(proc.info['pid'])
-            process.terminate()
-            isKilled = True
-    if isKilled == True:
-        return f"{app_name} is closed."
-    return (f"{app_name} is not running or not installed.")
-
-                
+    try:
+        app = pygetwindow.getWindowsWithTitle(appName)[0]
+        app.close()
+    except IndexError:
+        return f"{appName} is not opened or not installed"
+   
                 
 def openApplication(appName):
     try:
