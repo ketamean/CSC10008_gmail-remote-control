@@ -90,7 +90,7 @@
                         <!-- divider -->
                     </div>
     
-                    <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
+                    <div style="width: 100%; display: flex; justify-content: center; align-items: center; flex-direction: column;">
                         <button
                             type="button"
                             style="font-weight: initial; font-style: italic; width: 65%;"
@@ -100,6 +100,30 @@
                         >
                             Register
                         </button>
+
+                        <div id="aboutus-icon" style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+                            <a href="https://github.com/ketamean/CSC10008_gmail-remote-control/tree/main" target="_blank">
+                                <img
+                                    style="width: 30px; height: 30px;"
+                                    src="{{ url_for('static', filename='asset/github-logo.png') }}"
+                                    title="Our repos" alt="Link to repos on Github"
+                                >
+                            </a>
+                            <div style="width: 10%;">
+
+                            </div>
+                            <button
+                                type="button"
+                                onclick="openUserManualModal()"
+                                style="border: none; background-color: transparent; margin: 0; padding: 0;"
+                            >
+                                <img
+                                    style="width: 33px; height: 33px;"
+                                    src="{{ url_for('static', filename='asset/user-manual.png') }}"
+                                    title="Please read this user manual" alt="User manual"
+                                />
+                            </button>
+                        </div>
                     </div>
                 </div>    
             </div>
@@ -109,6 +133,67 @@
                 src="{{ url_for('static', filename='asset/loading.gif') }}"
                 id="loading-gif"
             >
+        </div>
+
+        <div class="modal__overlay" id="modal__overlay__manual">
+            <div class="modal__inner" style="width: 60%; height: 90%;">
+                <div class="modal__header">
+                    USER MANUAL (check our github repos for more details)
+                </div>
+                <div class="modal__body">
+                    <ol>
+                        <li>Choose an empty folder on your device, right-click and choose <em>Open in Terminal</em>.</li>
+                        <li>
+                            Paste this to terminal:
+                            <pre><code>git clone https://github.com/ketamean/CSC10008_gmail-remote-control.git</code></pre>
+                        </li>
+                        <li>Open the chosen folder in file explorer.</li>
+                        <li>Start the server:
+                            <ul>
+                                <li>Double-click on <code>run_server.cmd</code>.</li>
+                                <li>To start receiving messages, choose <em>Start</em>.</li>
+                                <li>To stop receiving messages, choose <em>Stop</em>.</li>
+                                <li>To halt and close the app, choose <em>Exit</em>. This action will simultaneously exit the batch (which means you do not need to manually terminate the batch on terminal).</li>
+                            </ul>
+                        </li>
+                        <li>After starting server, now you can open client-side app at anytime as long as the server is alive:
+                            <ul>
+                                <li>Double-click on <code>run_client.cmd</code>.</li>
+                                <li>There will be an http link to be run locally on your web browser. The link should be in the format <code>http://127.0.0.1:PORT</code>, where <code>PORT</code> usually is <code>5000</code>.</li>
+                                <li>There are 2 options: <u><em>anonymous mode</em></u> (without logging in to your Gmail account) and <u><em>logged-in mode</em></u> (you must log in to your Gmail account to use)
+                                    <ul>
+                                        <li><u><em>Disclaimer</em></u>: we do <strong>NOT</strong> collect your password as we get the authorization via OAuth2.0.</li>
+                                        <li>Within using this app <em>anonymously</em>, you will be prevented from using 4 features:
+                                            <ul>
+                                                <li>Shut down server.</li>
+                                                <li>Log out server.</li>
+                                                <li>Start an application on the server.</li>
+                                                <li>Close an application on the server.</li>
+                                            </ul>
+                                        </li>
+                                        <li>When using this app in <em>logged-in mode</em>, you will have accessibility to all of our features.
+                                            <ul>
+                                                <li>However, to obtain this, you firstly are forced to register your Gmail address to the server by clicking on <em>Register</em> button.</li>
+                                                <li>Without having been registered, you <strong>cannot</strong> log in to our application.</li>
+                                            </ul>
+                                        </li>
+                                        <li>After using the app, please remember to terminate the batch by pressing <code>Ctrl + C</code> on the terminal displayed after clicking on <code>run_client.cmd</code>. If not, the port on which this app is running will be occupied.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+                <div class="modal__footer">
+                    <button
+                        type="button"
+                        class="modal-button"
+                        onclick="closeUserManualModal()"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
         </div>
     </body>
 

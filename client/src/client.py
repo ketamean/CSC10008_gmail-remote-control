@@ -35,7 +35,7 @@ def initAccount(tokenFile):
 @app.route("/register/", methods=['GET', 'POST'])
 def register():
     helper.Flag.SuccessRequest = False
-    helper.Flag.Register = False
+    helper.Flag.Register = None
     try:
         if os.path.exists('config/token.json'):
             os.remove('config/token.json')
@@ -65,7 +65,7 @@ def register():
         )
         if reg != None:
             break
-        time.sleep(2)
+        time.sleep(1.5)
     if reg == True or reg == False:
         helper.Info.Creds = creds
         helper.Info.Service = service
@@ -161,7 +161,7 @@ def control_with_gmail():
             break
         time.sleep(2)
     print('control_with_gmail: auth = ', auth)
-    if not auth:
+    if auth == None:
         helper.Flag.AuthenState = 'failed'
         helper.Flag.Anonymous = False
         return redirect( url_for('login') )
@@ -228,10 +228,6 @@ def get_response():
     try:
         resultPath = helper.createResultDir()
         while True:
-            # flag, err = gmail_api.readMail_command(
-            #     Creds=helper.Info.Creds, resultPath=resultPath,
-            #     threadId=gmail_api.getThreadId(helper.Info.SentMsgObject),
-            # )
             res = gmail_api.readMail(
                 Creds=helper.Info.Creds, Service=helper.Info.Service, threadId=gmail_api.getThreadId(helper.Info.SentMsgObject),
                 query='This is the result', work_w_plain_text_mail=False, resultPath=resultPath
@@ -243,7 +239,7 @@ def get_response():
                 print('get_response | send mail err: ', res)
                 helper.makeTextFile(dir_path=resultPath, content=res, filename = "error")
                 break
-            time.sleep(2)
+            time.sleep(1.5)
         helper.Info.SentMsgObject = None
         helper.Flag.SuccessRequest = True
         if helper.isEmptyDir(resultPath):

@@ -13,6 +13,7 @@
 - 22127254 - [Truong Nguyen Hien Luong](https://github.com/gnoulh)
 
 ## About this project
+- This project is an application that helps you to request server to some certain tasks and then receive responses. The process of sending and receiving package are supported by Gmail.
 ### Introduction
 - Client: sends commands via Google Mail to server, then receives and donwloads response to local computer.
 - Server: reads mails from clients, processes and returns the result to them. 
@@ -22,27 +23,30 @@ Check out our [demo video](https://www.youtube.com/) on youtube to see the appli
 ... coming soon ...
 
 ## How to use?
+- Prerequisite:
+  - Python: this application is perfectly run on python 3.12.0
 1. Choose an empty folder on your device, right-click and choose *Open in Terminal*.
 2. Paste this to terminal:
     ```
     git clone https://github.com/ketamean/CSC10008_gmail-remote-control.git
     ```
-3. Start the server:
-   1. Double-click on `run_server.cmd`.
-   2. To start receiving messages, choose *Start*.
-   3. To stop receiving messages, choose *Stop*.
-   4. To halt and close the app, choose *Exit*. This action will simultaneously exit the batch (which means you do not need to manually terminate the batch on terminal).
-4. After starting server, now you can open client-side app at anytime as long as the server is alive:
-   1. Double-click on `run_client.cmd`.
-   2. There will be an http link to be run locally on your web browser. The link should be in the format `http://127.0.0.1:PORT`, where `PORT` usually is `5000`.
-   3. There are 2 options: <u>*anonymous mode*</u> (without loging in your gmail acocunt) and <u>*logged-in mode*</u> (you must log in to your gmail account to use)
-      1. <u>*Disclaimer*</u>: we do **NOT** collect your password as we get the authorization via OAuth2.0.
-      2. Within using this app ***anonymously***, you will be prevented from using 4 features:
+3. Open the chosen folder in file explorer.
+4. Start the server:
+   - Double-click on `run_server.cmd`.
+   - To start receiving messages, choose *Start*.
+   - To stop receiving messages, choose *Stop*.
+   - To halt and close the app, choose *Exit*. This action will simultaneously exit the batch (which means you do not need to manually terminate the batch on terminal).
+5. After starting server, now you can open client-side app at anytime as long as the server is alive:
+   - Double-click on `run_client.cmd`.
+   - There will be an http link to be run locally on your web browser. The link should be in the format `http://127.0.0.1:PORT`, where `PORT` usually is `5000`.
+   - There are 2 options: <u>*anonymous mode*</u> (without loging in your gmail acocunt) and <u>*logged-in mode*</u> (you must log in to your gmail account to use)
+      - <u>*Disclaimer*</u>: we do **NOT** collect your password as we get the authorization via OAuth2.0.
+      - Within using this app ***anonymously***, you will be prevented from using 4 features:
            - Shut down server.
            - Log out server.
            - Start an application on server.
            - Close an application on server.
-      3. When using this app in ***logged-in mode***, you will have an accessibility to all of our features.
+      - When using this app in ***logged-in mode***, you will have an accessibility to all of our features.
            - However, to obtain this, you firstly are forced to register your gmail address to the server by clicking on *Register* button.
            - Without having been registered, you **cannot** log in to our application.
-      4. After using the app, please remember to terminate the batch by press `Ctrl + C` on the terminal displayed after clicking on `run_client.cmd`. If don't, the port on which this app is running will be occupied.
+      - After using the app, please remember to terminate the batch by press `Ctrl + C` on the terminal displayed after clicking on `run_client.cmd`. If don't, the port on which this app is running will be occupied.
