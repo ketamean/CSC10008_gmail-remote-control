@@ -42,7 +42,6 @@ body = MIMEText(content, "plain")
 message.attach(body)
 
 directory = os.listdir("Screenshot")
-
 for file in directory:
     attachment_filename = file
     if attachment_filename == "save_folder.txt":
