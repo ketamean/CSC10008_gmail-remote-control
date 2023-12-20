@@ -41,7 +41,7 @@ def smtp_login():
 
 def destructor(imap, smtp):
     imap.close()
-    imap.log_out()
+    imap.logout()
     smtp.quit()
 
 
@@ -186,7 +186,7 @@ def create_send_mail(smtp, type_of_work, to_mail, messageId, mail_content):
             message.attach(part)
             os.remove(os.path.join("ServiceOutput", attachment_filename))
 
-    smtp.send_mail("chiemthoica@gmail.com",to_mail, message.as_string())
+    smtp.sendmail("chiemthoica@gmail.com",to_mail, message.as_string())
 
 def handle_work_list(work_list, from_mail):
     is_keylog = False
@@ -214,7 +214,7 @@ def handle_work_list(work_list, from_mail):
 
             with open(outputDir, "w") as file:
                 file.write("The computer is shutting down")
-            gmail_send_message_report(mail, msgId, threadId)
+            return "[shut_down]"
             service.shutdown()
             pass
         if task == "[log_out]" and is_anonymous == False:
@@ -226,8 +226,7 @@ def handle_work_list(work_list, from_mail):
 
             with open(outputDir, "w") as file:
                 file.write("The computer is logging out")
-            gmail_send_message_report(mail, msgId, threadId)
-            service.logout()
+            return "[log_out]"
             pass
         if task.find("[start_app]") != -1 and is_anonymous == False:
             appName = task[12:]
@@ -235,19 +234,24 @@ def handle_work_list(work_list, from_mail):
         if task.find("[close_app]") != -1 and is_anonymous == False:
             appName = task[12:]
             service.closeApplication(appName)
-    gmail_send_message_report(mail, msgId, threadId)
+    return "nothing"
 
-def handle_server(imap, smtp):
+def server_checking(imap, smtp):
     #check working mail
     ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC working")')
     body, from_mail, messagesId = check_mail(imap, ret, messages)
     if body == "No mail":
         return
     command = handle_work_list(body.splitlines(), from_mail)
-    create_send_mail(smtp, "working", from_mail, messagesId)
+    create_send_mail(smtp, "working", from_mail, messagesId, "This is the result")
+    if (command == "[shut_down]"):
+        service.shutdown()
+    elif (command == "[log_out]"):
+        service.logout()
 
+    #check register mail
+    ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC register")')    
 imap = imap_login()
-
-ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC working")')
-
-check_mail(imap, ret, messages)
+smtp = smtp_login()
+server_checking(imap, smtp)
+destructor(imap, smtp)
