@@ -39,10 +39,21 @@ def smtp_login():
     smtp.login(email, password)
     return smtp
 
-def destructor(imap, smtp):
+def mail_list_login():
+    my_mail_list = []
+    with open("usermail.txt", "r") as mailFile:
+            for mail in mailFile:
+                my_mail_list.append(mail.rstrip())
+    return my_mail_list
+
+def destructor(imap, smtp, my_mail_list):
     imap.close()
     imap.logout()
     smtp.quit()
+    with open("usermail.txt", "w") as mailFile:
+        for mail in my_mail_list:
+            mailFile.write(mail + "\n")
+
 
 
 def imap_search_mail(imap, search_criteria):
@@ -195,8 +206,8 @@ def handle_work_list(work_list, from_mail):
         is_anonymous = True
     for task in work_list:
         if task.find("[key_logger]") != -1:
-            if iskeylog == False:
-                iskeylog = True
+            if is_keylog == False:
+                is_keylog = True
                 duration = task[13:]
                 service.keylogger(int(duration))
         if task == "[screen_capture]":
@@ -236,7 +247,18 @@ def handle_work_list(work_list, from_mail):
             service.closeApplication(appName)
     return "nothing"
 
-def server_checking(imap, smtp):
+def handle_register_mail(mail, mail_list):
+    is_appear = False
+    for old_mail in mail_list:
+        if old_mail == mail:
+            is_appear = True
+    if is_appear == True:
+        return "already existed"
+    else:
+        mail_list.append(mail)
+        return "added"
+
+def server_checking(imap, smtp, mail_list):
     #check working mail
     ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC working")')
     body, from_mail, messagesId = check_mail(imap, ret, messages)
@@ -250,8 +272,14 @@ def server_checking(imap, smtp):
         service.logout()
 
     #check register mail
-    ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC register")')    
+    ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC register")')
+    body, from_mail, messageId = check_mail(imap, ret, messages)
+    if body == "No mail":
+        return
+    mail_content = handle_register_mail(body, mail_list)
+    create_send_mail(smtp, "register", from_mail, messageId, mail_content)
 imap = imap_login()
 smtp = smtp_login()
+my_mail_list = mail_list_login()
 server_checking(imap, smtp)
-destructor(imap, smtp)
+destructor(imap, smtp, my_mail_list)
