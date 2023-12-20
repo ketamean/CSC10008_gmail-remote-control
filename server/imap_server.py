@@ -29,6 +29,7 @@ def imap_login():
     
     # login into the gmail account
     imap.login(username, password)
+    imap.select("inbox", readonly=False)
     return imap
 
 def smtp_login():
@@ -57,7 +58,6 @@ def destructor(imap, smtp, my_mail_list):
 
 
 def imap_search_mail(imap, search_criteria):
-    imap.select("Inbox")
 
     ret, messages = imap.search(None, '(UNSEEN) ' + search_criteria)
     return (ret, messages) 
@@ -68,6 +68,7 @@ def check_mail(imap, ret, messages):
         for num in nmessages:
             print("processing")
             res, msg = imap.fetch(str(num), "(RFC822)")
+            imap.store(str(num), '-FLAGS', '\\Seen')
             for response in msg:
                 if isinstance(response, tuple):
                     # parse a bytes email into a message object
@@ -142,7 +143,7 @@ def check_mail(imap, ret, messages):
                         webbrowser.open(filepath)
                     print("="*100)
     else:
-        return "No mail"
+        return "No mail","",""
 
 def create_send_mail(smtp, type_of_work, to_mail, messageId, mail_content):
     message = MIMEMultipart()
@@ -258,28 +259,44 @@ def handle_register_mail(mail, mail_list):
         mail_list.append(mail)
         return "added"
 
+def handle_login_mail(mail, mail_list):
+    is_appear = False
+    for old_mail in mail_list:
+        if old_mail == mail:
+            is_appear = True
+            break 
+    if is_appear:
+        return "YES"
+    return "NO"
+
 def server_checking(imap, smtp, mail_list):
     #check working mail
-    ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC working")')
+    ret, messages = imap_search_mail(imap, '(SUBJECT "vinhtest")')
     body, from_mail, messagesId = check_mail(imap, ret, messages)
-    if body == "No mail":
-        return
-    command = handle_work_list(body.splitlines(), from_mail)
-    create_send_mail(smtp, "working", from_mail, messagesId, "This is the result")
-    if (command == "[shut_down]"):
-        service.shutdown()
-    elif (command == "[log_out]"):
-        service.logout()
+    if body != "No mail":
+        print(body)
+        command = handle_work_list(body.splitlines(), from_mail)
+        create_send_mail(smtp, "working", from_mail, messagesId, "This is the result")
+        if (command == "[shut_down]"):
+            service.shutdown()
+        elif (command == "[log_out]"):
+            service.logout()
 
     #check register mail
     ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC register")')
     body, from_mail, messageId = check_mail(imap, ret, messages)
-    if body == "No mail":
-        return
-    mail_content = handle_register_mail(body, mail_list)
-    create_send_mail(smtp, "register", from_mail, messageId, mail_content)
+    if body != "No mail":
+        mail_content = handle_register_mail(body.rstrip(), mail_list)
+        create_send_mail(smtp, "register", from_mail, messageId, mail_content)
+
+    #check login mail
+    ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC authentication")')
+    body, from_mail, messageId = check_mail(imap, ret, messages)
+    if body != "No mail":
+        mail_content = handle_login_mail(body.rstrip(), mail_list)
+        create_send_mail(smtp, "authentication", from_mail, messageId, mail_content)
 imap = imap_login()
 smtp = smtp_login()
 my_mail_list = mail_list_login()
-server_checking(imap, smtp)
+server_checking(imap, smtp, my_mail_list)
 destructor(imap, smtp, my_mail_list)
