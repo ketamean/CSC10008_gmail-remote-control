@@ -62,7 +62,20 @@ def imap_search_mail(imap, search_criteria):
     ret, messages = imap.search(None, '(UNSEEN) ' + search_criteria)
     return (ret, messages) 
 
-def check_mail(imap, ret, messages):
+def validate_body(body, type_of_work):
+    if type_of_work == "working":
+        temp = body.splitlines()
+        if temp[0] == "request":
+            return True
+    if type_of_work == "register":
+        if body.find("already existed") == -1 and body.find("added") == -1:
+            return True
+    if type_of_work == "login":
+        if body.find("YES") == -1 and body.find("NO") == -1:
+            return True
+    return False
+
+def check_mail(imap, ret, messages, type_of_work):
     nmessages = messages[0].decode().split(' ')
     if ret == "OK" and nmessages[0] != '':
         for num in nmessages:
@@ -109,18 +122,10 @@ def check_mail(imap, ret, messages):
                                 pass
                             if content_type == "text/plain" and "attachment" not in content_disposition:
                                 # return text/plain emails and skip attachments
-                                return body, From, messageId
-                            elif "attachment" in content_disposition:
-                                # download attachment
-                                filename = part.get_filename()
-                                if filename:
-                                    folder_name = clean(subject)
-                                    if not os.path.isdir(folder_name):
-                                        # make a folder for this email (named after the subject)
-                                        os.mkdir(folder_name)
-                                    filepath = os.path.join(folder_name, filename)
-                                    # download attachment and save it
-                                    open(filepath, "wb").write(part.get_payload(decode=True))
+                                
+                                if validate_body(body):
+                                    imap.store(str(num), '+FLAGS', '\\Seen')
+                                    return body, From, messageId
                     else:
                         # extract content type of email
                         content_type = msg.get_content_type()
@@ -128,19 +133,9 @@ def check_mail(imap, ret, messages):
                         body = msg.get_payload(decode=True).decode()
                         if content_type == "text/plain":
                             # return only text email parts
-                            return body, From, messageId
-                    if content_type == "text/html":
-                        # if it's HTML, create a new HTML file and open it in browser
-                        folder_name = clean(subject) 
-                        if not os.path.isdir(folder_name):
-                            # make a folder for this email (named after the subject)
-                            os.mkdir(folder_name)
-                        filename = "index.html"
-                        filepath = os.path.join(folder_name, filename)
-                        # write the file
-                        open(filepath, "w").write(body)
-                        # open in the default browser
-                        webbrowser.open(filepath)
+                            if validate_body(body):
+                                imap.store(str(num), '+FLAGS', '\\Seen')
+                                return body, From, messageId
                     print("="*100)
     else:
         return "No mail","",""
@@ -271,10 +266,9 @@ def handle_login_mail(mail, mail_list):
 
 def server_checking(imap, smtp, mail_list):
     #check working mail
-    ret, messages = imap_search_mail(imap, '(SUBJECT "vinhtest")')
-    body, from_mail, messagesId = check_mail(imap, ret, messages)
+    ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC working")')
+    body, from_mail, messagesId = check_mail(imap, ret, messages, "working")
     if body != "No mail":
-        print(body)
         command = handle_work_list(body.splitlines(), from_mail)
         create_send_mail(smtp, "working", from_mail, messagesId, "This is the result")
         if (command == "[shut_down]"):
@@ -284,14 +278,14 @@ def server_checking(imap, smtp, mail_list):
 
     #check register mail
     ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC register")')
-    body, from_mail, messageId = check_mail(imap, ret, messages)
+    body, from_mail, messageId = check_mail(imap, ret, messages, "register")
     if body != "No mail":
         mail_content = handle_register_mail(body.rstrip(), mail_list)
         create_send_mail(smtp, "register", from_mail, messageId, mail_content)
 
     #check login mail
     ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC authentication")')
-    body, from_mail, messageId = check_mail(imap, ret, messages)
+    body, from_mail, messageId = check_mail(imap, ret, messages, "login")
     if body != "No mail":
         mail_content = handle_login_mail(body.rstrip(), mail_list)
         create_send_mail(smtp, "authentication", from_mail, messageId, mail_content)
