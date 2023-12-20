@@ -1,6 +1,5 @@
 import PySimpleGUI as sg
-import server
-
+import imap_server
 
 finalize = True
 layout = [
@@ -11,15 +10,15 @@ layout = [
 
 # create the window
 window = sg.Window("Pc Remote Control Server", layout, margins=(10, 10), finalize=True)
-creds = server.main()
+imap = imap_server.imap_login()
+smtp = imap_server.smtp_login()
+my_mail_list = imap_server.mail_list_login()
 started = False
 timecount = 0
 while True:
     if started == True:
-        event, values = window.read(timeout=5000)
-        server.CheckRegisterMail(creds)
-        server.CheckLoginMail(creds)
-        server.CheckMail(creds)
+        event, values = window.read(timeout=4000)
+        imap_server.operate_server(imap, smtp, my_mail_list)
         timecount = timecount + 1
     else:
         event, values = window.read()
@@ -37,4 +36,4 @@ while True:
         window["-OUTPUT-"].update("")
 window.close()
 
-server.program_destructor()
+imap_server.destructor(imap,smtp, my_mail_list)

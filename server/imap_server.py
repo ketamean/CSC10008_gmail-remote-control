@@ -58,7 +58,6 @@ def destructor(imap, smtp, my_mail_list):
 
 
 def imap_search_mail(imap, search_criteria):
-
     ret, messages = imap.search(None, '(UNSEEN) ' + search_criteria)
     return (ret, messages) 
 
@@ -79,7 +78,6 @@ def check_mail(imap, ret, messages, type_of_work):
     nmessages = messages[0].decode().split(' ')
     if ret == "OK" and nmessages[0] != '':
         for num in nmessages:
-            print("processing")
             res, msg = imap.fetch(str(num), "(RFC822)")
             imap.store(str(num), '-FLAGS', '\\Seen')
             for response in msg:
@@ -105,9 +103,7 @@ def check_mail(imap, ret, messages, type_of_work):
                     messageId = msg["Message-Id"]
                     # if isinstance(messageId, bytes):
                     #     messageId = messageId.decode(encoding)
-                    print("Subject:", subject)
                     print("From:", From)
-                    print("Message-ID:", messageId)
                     # if the email message is multipart
                     if msg.is_multipart():
                         # iterate over email parts
@@ -123,7 +119,7 @@ def check_mail(imap, ret, messages, type_of_work):
                             if content_type == "text/plain" and "attachment" not in content_disposition:
                                 # return text/plain emails and skip attachments
                                 
-                                if validate_body(body):
+                                if validate_body(body, type_of_work):
                                     imap.store(str(num), '+FLAGS', '\\Seen')
                                     return body, From, messageId
                     else:
@@ -133,12 +129,12 @@ def check_mail(imap, ret, messages, type_of_work):
                         body = msg.get_payload(decode=True).decode()
                         if content_type == "text/plain":
                             # return only text email parts
-                            if validate_body(body):
+                            if validate_body(body, type_of_work):
                                 imap.store(str(num), '+FLAGS', '\\Seen')
                                 return body, From, messageId
                     print("="*100)
-    else:
-        return "No mail","",""
+    return "No mail","",""
+    
 
 def create_send_mail(smtp, type_of_work, to_mail, messageId, mail_content):
     message = MIMEMultipart()
@@ -288,9 +284,17 @@ def server_checking(imap, smtp, mail_list):
     body, from_mail, messageId = check_mail(imap, ret, messages, "login")
     if body != "No mail":
         mail_content = handle_login_mail(body.rstrip(), mail_list)
+        print(body.rstrip())
         create_send_mail(smtp, "authentication", from_mail, messageId, mail_content)
-imap = imap_login()
-smtp = smtp_login()
-my_mail_list = mail_list_login()
-server_checking(imap, smtp, my_mail_list)
-destructor(imap, smtp, my_mail_list)
+
+
+
+def operate_server(imap, smtp, my_mail_list):
+    server_checking(imap, smtp, my_mail_list)
+    print("finish handle")
+
+# imap = imap_login()
+# smtp = smtp_login()
+# my_mail_list = mail_list_login()
+# operate_server(imap, smtp, my_mail_list)
+# destructor(imap, smtp, my_mail_list)
