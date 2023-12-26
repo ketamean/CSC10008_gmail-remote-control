@@ -10,14 +10,14 @@ layout = [
 
 # create the window
 window = sg.Window("Pc Remote Control Server", layout, margins=(10, 10), finalize=True)
-imap = imap_server.imap_login()
-smtp = imap_server.smtp_login()
 my_mail_list = imap_server.mail_list_login()
 started = False
 timecount = 0
 while True:
     if started == True:
         event, values = window.read(timeout=4000)
+        imap = imap_server.imap_login()
+        smtp = imap_server.smtp_login()
         imap_server.operate_server(imap, smtp, my_mail_list)
         timecount = timecount + 1
     else:

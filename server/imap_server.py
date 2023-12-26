@@ -192,6 +192,7 @@ def create_send_mail(smtp, type_of_work, to_mail, messageId, mail_content):
     smtp.sendmail("chiemthoica@gmail.com",to_mail, message.as_string())
 
 def handle_work_list(work_list, from_mail):
+    print("handle work")
     is_keylog = False
     is_anonymous = False
     if (from_mail == "chiemthoica@gmail.com"):
@@ -264,6 +265,7 @@ def server_checking(imap, smtp, mail_list):
     #check working mail
     ret, messages = imap_search_mail(imap, '(SUBJECT "PCRC working")')
     body, from_mail, messagesId = check_mail(imap, ret, messages, "working")
+    print(body)
     if body != "No mail":
         command = handle_work_list(body.splitlines(), from_mail)
         create_send_mail(smtp, "working", from_mail, messagesId, "This is the result")
@@ -291,7 +293,7 @@ def server_checking(imap, smtp, mail_list):
 
 def operate_server(imap, smtp, my_mail_list):
     server_checking(imap, smtp, my_mail_list)
-    print("finish handle")
+    print("I am checking mail")
 
 # imap = imap_login()
 # smtp = smtp_login()
