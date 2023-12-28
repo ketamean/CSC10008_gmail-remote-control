@@ -13,18 +13,26 @@
 - 22127254 - [Truong Nguyen Hien Luong](https://github.com/gnoulh)
 
 ## About this project
-- This project is an application that helps you to request server to some certain tasks and then receive responses. The process of sending and receiving package are supported by Gmail.
+- This project is an application that helps you to request server to do some certain tasks and then receive responses. The process of sending and receiving package are supported by Gmail.
 ### Introduction
 - Client: sends commands via Google Mail to server, then receives and donwloads response to local computer.
 - Server: reads mails from clients, processes and returns the result to them. 
 ### Demo video
-Check out our [demo video](https://www.youtube.com/) on youtube to see the application behaviour.
+Check out our [demo video](https://youtu.be/DMN8exwKQ9k) on youtube to see the application's behaviour.
 ### Screenshots
-... coming soon ...
-
+- Login page
+![Alt text](assets/login_page.png)
+- OAuth authentication and authorization
+![Alt text](assets/oauth.png)
+- Anonymous control
+![Alt text](assets/anonymous.png)
+- Control with your own gmail
+![Alt text](assets/control_w_gmail.png)
+- Key logger
+![Alt text](assets/keylog.png)
 ## How to use?
 - Prerequisite:
-  - Python: this application is perfectly run on python 3.12.0
+  - Python: this application is perfectly run on python 3.12.0 and later
 1. Choose an empty folder on your device, right-click and choose *Open in Terminal*.
 2. Paste this to terminal:
     ```
@@ -49,4 +57,10 @@ Check out our [demo video](https://www.youtube.com/) on youtube to see the appli
       - When using this app in ***logged-in mode***, you will have an accessibility to all of our features.
            - However, to obtain this, you firstly are forced to register your gmail address to the server by clicking on *Register* button.
            - Without having been registered, you **cannot** log in to our application.
-      - After using the app, please remember to terminate the batch by press `Ctrl + C` on the terminal displayed after clicking on `run_client.cmd`. If don't, the port on which this app is running will be occupied.
+      - After using the app, please remember to terminate the batch by press `Ctrl + C` on the terminal displayed after clicking on `run_client.cmd`. If don't, the port on which this app is running will be occupied until the device is restarted.
+6. Notes:
+   - Although we do not collect your gmail account's password, we do need you to allow us to access to your mails in your mailbox. It essential to inform that, we only access to mails that match our convention with particular mail subjects, and we will not manually traverse your mailbox ourselves but we will obtain these within the help of Gmail API (query).
+   - If you terminate any processes yourself, you will not receive any results. However, you can still achieve what you want in case you these 3 things simutaneously occur:
+     - You are registering your account to our application
+     - You have SUCCESSFULLY LOGGED IN (which means you have already sent an email to server to register your account)
+     - Your account is accepted by server

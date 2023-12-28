@@ -137,7 +137,7 @@ def gmail_send_message_report(mail, messageId, threadId):
         message.attach(body)
 
         directory = os.listdir("Screenshot")
-        # print(directory)
+
         for file in directory:
             attachment_filename = file
             if attachment_filename == "save_folder.txt":
